@@ -1,0 +1,2174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1020">
+<title>Yeelight Blue II — Stable Release V14</title>
+<style>
+:root{
+  --bg:#080d18;--card:#111a2c;--card2:#0c1423;--line:#263550;
+  --text:#edf4ff;--muted:#91a0b8;--accent:#4f8cff;--good:#22c55e;
+  --danger:#ef4444;--shadow:0 18px 50px #0005;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 50% -10%,#172544 0,#080d18 48%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+button,input{font:inherit}
+button{border:0;cursor:pointer}
+.app{max-width:1080px;margin:auto;padding:24px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:12px}.bulb{font-size:30px}.brand h1{font-size:22px;margin:0}.brand p{margin:3px 0 0;color:var(--muted);font-size:13px}
+.connection{display:flex;align-items:center;gap:9px;background:#101a2c;border:1px solid var(--line);padding:9px 12px;border-radius:999px;font-size:13px}
+.dot{width:9px;height:9px;border-radius:50%;background:#64748b}.dot.good{background:var(--good);box-shadow:0 0 12px #22c55e88}.dot.bad{background:var(--danger)}
+.hero{background:linear-gradient(145deg,#121e34,#0e1728);border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:var(--shadow);text-align:center;position:relative;overflow:hidden}
+.heroGlow{position:absolute;width:280px;height:280px;border-radius:50%;left:50%;top:-180px;transform:translateX(-50%);background:#ffffff;filter:blur(100px);opacity:.07;pointer-events:none}
+.lightIcon{font-size:76px;line-height:1;margin:10px 0 12px;filter:drop-shadow(0 8px 30px #fff3)}
+.power{width:86px;height:86px;border-radius:50%;background:#1b2941;color:#dce8ff;font-size:31px;transition:.2s;box-shadow:inset 0 0 0 1px #31415d}
+.power.on{background:#f8fafc;color:#111827;box-shadow:0 0 45px #fff6,inset 0 0 0 1px #fff}
+.state{font-weight:800;font-size:18px}.substate{color:var(--muted);font-size:13px;margin-top:5px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
+.card h2{font-size:15px;margin:0 0 16px}.labelrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.value{font-weight:800}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.colorRow{display:flex;gap:14px;align-items:center}.colorInput{width:72px;height:56px;border:0;padding:0;background:transparent;cursor:pointer}.hex{flex:1;background:#09111f;color:#fff;border:1px solid #30405d;border-radius:10px;padding:12px}
+.presets{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.preset{height:44px;border-radius:10px;color:white;font-weight:700;border:1px solid #ffffff20;box-shadow:inset 0 0 0 1px #0002}
+.preset span{font-size:11px;text-shadow:0 1px 4px #000}
+.tempNote{font-size:12px;color:var(--muted);line-height:1.5}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{padding:10px 14px;border-radius:10px;background:var(--accent);color:#fff;font-weight:750}.btn.secondary{background:#25334d}.btn.danger{background:#7f1d1d}
+.debug{margin-top:16px}.debug summary{cursor:pointer;color:#b9c7dd;font-weight:750}.debug pre{white-space:pre-wrap;word-break:break-word;max-height:300px;overflow:auto;background:#070c15;border:1px solid #25344e;border-radius:10px;padding:12px;font-size:11px;color:#b9c8dc}
+.notice{font-size:12px;color:#aebbd0;line-height:1.5;background:#0b1423;border:1px solid #22314a;padding:10px;border-radius:10px;margin-top:12px}
+.hidden{display:none!important}
+@media(max-width:760px){.app{padding:14px}.top{align-items:flex-start;flex-direction:column}.connection{align-self:stretch;justify-content:center}.grid{grid-template-columns:1fr}.presets{grid-template-columns:repeat(3,1fr)}.hero{padding:24px 16px}}
+
+select{appearance:auto}
+#visualizer{border-radius:8px}
+
+.preset.saved{background:#18263d;border:1px solid #334765;padding:10px;text-align:left;color:#edf4ff}
+.preset.saved strong{display:block}.preset.saved small{display:block;color:#91a0b8;margin-top:3px}
+.historyItem{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#0c1423;border:1px solid #24334d;padding:10px;border-radius:10px;margin:7px 0}
+.historyMeta{font-size:12px;color:#91a0b8}.historyColor{width:28px;height:28px;border-radius:8px;border:1px solid #fff3}
+
+.queueBusy{color:#fbbf24!important}.queueOk{color:#86efac!important}
+
+.appNav{display:flex;gap:7px;overflow:auto;padding:8px;background:#0d1626;border:1px solid var(--line);border-radius:14px;margin:16px 0}
+.navBtn{white-space:nowrap;padding:9px 12px;border-radius:9px;background:#17243a;color:#b9c7dd;font-weight:750;border:1px solid transparent}
+.navBtn:hover{border-color:#3a4e70}.navBtn.active{background:var(--accent);color:#fff}
+.appSection{display:none}.appSection.active{display:block}
+#homeControls{display:block}
+.homeStats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px}
+.homeStats span{background:#0b1423;border:1px solid #253650;padding:7px 10px;border-radius:999px;color:#aebbd0;font-size:12px}
+.homeStats b{color:#eef5ff}
+.miniStatus{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.miniStatus div{background:#0b1423;border:1px solid #253650;border-radius:12px;padding:12px}
+.miniStatus small{display:block;color:#91a0b8}.miniStatus strong{display:block;margin-top:4px}
+.protocolBadge{display:inline-block;padding:4px 8px;border-radius:999px;background:#12311f;color:#86efac;font-size:11px;font-weight:800}
+@media(max-width:760px){.miniStatus{grid-template-columns:repeat(2,1fr)}}
+
+
+/* V9.1 stability UI */
+.queuePill{transition:.15s}
+.queuePill.warn{background:#3b2410!important;color:#fbbf24!important}
+.queuePill.error{background:#3b1010!important;color:#fca5a5!important}
+.bleGuard{font-size:11px;color:#91a0b8;margin-top:8px}
+
+
+/* V10 Real Controller polish */
+.quickStart{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0;background:#0d1829;border:1px solid #2b3d5b;border-radius:16px;padding:12px 14px}
+.quickStart strong{display:block}.quickStart span{color:var(--muted);font-size:12px}
+.statusGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.statusCard{background:#0b1423;border:1px solid #253650;border-radius:13px;padding:12px}.statusCard small{display:block;color:var(--muted);font-size:11px}.statusCard b{display:block;margin-top:5px;font-size:13px}
+.statusGood{color:#86efac}.statusMuted{color:#b8c4d8}.developerOnly{border-top:1px solid #253650;margin-top:16px;padding-top:16px}
+.flowMode{display:flex;gap:8px;flex-wrap:wrap}.flowMode button.active{outline:2px solid #8fb4ff;box-shadow:0 0 0 2px #4f8cff44}
+.toast{position:fixed;right:18px;bottom:18px;z-index:50;background:#111c30;border:1px solid #385074;color:#fff;border-radius:12px;padding:11px 14px;box-shadow:0 12px 35px #0008;transform:translateY(20px);opacity:0;pointer-events:none;transition:.2s}.toast.show{transform:none;opacity:1}
+@media(max-width:760px){.statusGrid{grid-template-columns:repeat(2,1fr)}.quickStart{align-items:flex-start;flex-direction:column}}
+
+/* V11.1 Basic Effects + CRUD */
+.effectGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px}.effectCard{min-height:100px;background:#0c1423;border:1px solid #263550;border-radius:14px;color:var(--text);padding:10px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}.effectCard.active{border-color:#4f8cff;background:#162644;box-shadow:0 0 0 1px #4f8cff33 inset}.effectIcon{font-size:28px}.effectCard small{color:var(--muted);font-size:10px}.effectControls{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:end;margin-top:14px}.sceneToolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px}.segmented{display:flex;gap:6px}.segBtn{background:#17243b;color:#b9c7dd;border:1px solid #2a3b5a;border-radius:9px;padding:8px 12px}.segBtn.active{background:#4f8cff;color:white;border-color:#4f8cff}.presetList{display:grid;gap:10px}.presetRow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:#0c1423;border:1px solid #263550;border-radius:13px;padding:12px}.presetSwatch{width:38px;height:38px;border-radius:10px;border:1px solid #ffffff33}.presetInfo strong{display:block}.presetInfo small{display:block;color:var(--muted);margin-top:3px}.presetActions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.presetActions .btn{padding:7px 10px;font-size:12px}.modalBackdrop{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;padding:20px;z-index:100}.modalBackdrop.open{display:flex}.modal{width:min(460px,100%);background:#111a2c;border:1px solid #30405d;border-radius:18px;padding:20px;box-shadow:0 25px 80px #000b}.modal h3{margin:0 0 14px}.modalActions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}@media(max-width:800px){.effectGrid{grid-template-columns:repeat(3,1fr)}.effectControls{grid-template-columns:1fr}.presetRow{grid-template-columns:auto 1fr}.presetActions{grid-column:1/-1;justify-content:flex-start}}@media(max-width:520px){.effectGrid{grid-template-columns:repeat(2,1fr)}}
+
+/* V12 Timer + Energy */
+.timerGrid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.timerHero{display:flex;align-items:center;justify-content:space-between;gap:14px;background:#0b1423;border:1px solid #253650;border-radius:14px;padding:14px}.timerBig{font-size:30px;font-weight:900;letter-spacing:.5px}.timerState{color:#86efac;font-weight:800}.timerState.off{color:#91a0b8}.scheduleRow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}.energyCards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.energyCard{background:#0b1423;border:1px solid #253650;border-radius:14px;padding:14px}.energyCard small{display:block;color:var(--muted);font-size:11px}.energyCard strong{display:block;font-size:20px;margin-top:5px}.meter{height:9px;background:#07101d;border-radius:999px;overflow:hidden;border:1px solid #24334d}.meter i{display:block;height:100%;width:0;background:var(--accent);border-radius:inherit;transition:width .25s}.estimateTag{display:inline-block;padding:4px 8px;border-radius:999px;background:#3b2b10;color:#fbbf24;font-size:11px;font-weight:800}.timerList{display:grid;gap:8px;margin-top:12px}.timerListItem{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#0c1423;border:1px solid #263550;border-radius:12px;padding:10px}.timerListItem small{color:var(--muted)}
+@media(max-width:760px){.timerGrid{grid-template-columns:1fr}.energyCards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.energyCards{grid-template-columns:1fr}}
+
+
+
+/* V14 Final Polish */
+.v14-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 4px}
+.v14-status{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border:1px solid #2b3952;border-radius:999px;background:#0d1626;font-size:12px;color:var(--muted)}
+.v14-status-dot{width:7px;height:7px;border-radius:50%;background:#64748b}
+.v14-status-dot.on{background:#37d67a;box-shadow:0 0 0 4px #37d67a22}
+.v14-status-dot.off{background:#f7c948;box-shadow:0 0 0 4px #f7c94822}
+.v14-section-note{font-size:12px;color:var(--muted);line-height:1.5}
+.v14-about-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.v14-about-card{border:1px solid #263550;border-radius:12px;background:#0c1423;padding:13px}
+.v14-about-card strong{display:block;margin-bottom:4px}
+.v14-kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;border:1px solid #334155;background:#111827;border-radius:5px;padding:2px 5px;font-size:11px}
+.v14-footer{padding:18px 0 28px;text-align:center;color:var(--muted);font-size:11px}
+@media(max-width:760px){.v14-about-grid{grid-template-columns:1fr}.v14-topbar{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="app">
+<div id="v14Topbar" class="v14-topbar">
+  <div>
+    <strong>Yeelight Blue II Controller</strong>
+    <div class="v14-section-note">Local Bluetooth controller · Windows + Chrome</div>
+  </div>
+  <div id="v14Status" class="v14-status">
+    <span id="v14StatusDot" class="v14-status-dot"></span>
+    <span id="v14StatusText">Disconnected</span>
+  </div>
+</div>
+
+  <header class="top">
+    <div class="brand">
+      <div class="bulb">💡</div>
+      <div><h1>Yeelight Blue II</h1><p>Bluetooth controller · Windows + Chrome · V14 Stable</p></div>
+    </div>
+    <div class="connection"><span id="dot" class="dot"></span><span id="connText">Disconnected</span><span id="queueText" style="margin-left:8px;color:#91a0b8">Queue: 0</span></div>
+  </header>
+
+  
+  <section class="hero" id="hero">
+    <div class="heroGlow" id="heroGlow"></div>
+    <div class="lightIcon">💡</div>
+    <button id="power" class="power" title="Power">⏻</button>
+    <div class="state" id="state">OFF</div>
+    <div class="substate" id="deviceName">Connect your Yeelight Blue II</div>
+    <div class="actions" style="justify-content:center;margin-top:16px">
+      <button id="connect" class="btn">Connect Bluetooth</button>
+      <button id="disconnect" class="btn secondary" disabled>Disconnect</button>
+      <button id="refresh" class="btn secondary" disabled>Refresh Status</button>
+    </div>
+    <div class="homeStats">
+      <span>🎨 <b id="homeColor">#FFFFFF</b></span>
+      <span>🔆 <b id="homeBrightness">100%</b></span>
+      <span>🌡️ <b id="homeTemp">—</b></span>
+      <span id="homeQueue">Queue 0</span>
+      <span>⏱️ <b id="homeTimer">No timer</b></span>
+      <span>⚡ <b id="homeEnergy">0.000 kWh</b></span>
+    </div>
+  </section>
+
+  <nav class="appNav">
+    <button class="navBtn active" data-section="homeControls">🏠 Home</button>
+    <button class="navBtn" data-section="colorSection">🎨 Color</button>
+    <button class="navBtn" data-section="tempSection">🌡️ Temperature</button>
+    <button class="navBtn" data-section="scenesSection">🎬 Scenes</button>
+    <button class="navBtn" data-section="musicSection">🎵 Music</button>
+    <button class="navBtn" data-section="flowSection">🌊 Flow</button>
+    <button class="navBtn" data-section="historySection">🕘 History</button>
+    <button class="navBtn" data-section="timerSection">⏱️ Timer</button>
+    <button class="navBtn" data-section="energySection">⚡ Energy</button>
+    <button class="navBtn" data-section="backupSection">💾 Backup</button>
+    <button class="navBtn" data-section="aboutSection">ℹ️ About</button>
+    <button class="navBtn" data-section="developerSection">🛠️ Developer</button>
+  </nav>
+
+  <div class="quickStart">
+    <div><strong>Ready to control your bulb</strong><span>Connect once, then use Color, Temperature, Scenes, Music, Flow, Timer, Energy or Backup.</span></div>
+    <div class="actions">
+      <button id="quickConnect" class="btn">Connect</button>
+    </div>
+  </div>
+
+  <div class="statusGrid">
+    <div class="statusCard"><small>Bluetooth</small><b id="statusBluetooth" class="statusMuted">Disconnected</b></div>
+    <div class="statusCard"><small>Power</small><b id="statusPower" class="statusMuted">OFF</b></div>
+    <div class="statusCard"><small>Color Flow</small><b id="statusFlow" class="statusMuted">Stopped</b></div>
+    <div class="statusCard"><small>Current</small><b id="statusCurrent" class="statusMuted">#FFFFFF · 100%</b></div>
+  </div>
+
+  <div id="homeControls">
+  <div class="grid">
+    <section class="card">
+      <h2>Brightness</h2>
+      <div class="labelrow"><span>Lightness</span><span class="value"><span id="brightValue">100</span>%</span></div>
+      <input id="brightness" type="range" min="0" max="100" value="100">
+      <div class="actions" style="margin-top:12px">
+        <button class="btn secondary" data-bright="25">25%</button>
+        <button class="btn secondary" data-bright="50">50%</button>
+        <button class="btn secondary" data-bright="75">75%</button>
+        <button class="btn secondary" data-bright="100">100%</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Color</h2>
+      <div class="colorRow">
+        <input id="color" class="colorInput" type="color" value="#ffffff">
+        <input id="hex" class="hex" value="#FFFFFF" maxlength="7" spellcheck="false">
+        <button id="applyColor" class="btn">Apply</button>
+      </div>
+      <p class="tempNote">RGB and Color Temperature control are verified on the physical Blue II. CT uses the verified CLTMP command.</p>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Quick Colors</h2>
+    <div class="presets">
+      <button class="preset" data-color="#FF0000" style="background:#ef4444"><span>Red</span></button>
+      <button class="preset" data-color="#00FF00" style="background:#16a34a"><span>Green</span></button>
+      <button class="preset" data-color="#0000FF" style="background:#2563eb"><span>Blue</span></button>
+      <button class="preset" data-color="#FFFFFF" style="background:#e5e7eb;color:#111"><span>White</span></button>
+      <button class="preset" data-color="#FF00FF" style="background:#d946ef"><span>Pink</span></button>
+      <button class="preset" data-color="#00FFFF" style="background:#06b6d4"><span>Cyan</span></button>
+      <button class="preset" data-color="#FFA500" style="background:#f97316"><span>Orange</span></button>
+      <button class="preset" data-color="#8000FF" style="background:#7c3aed"><span>Purple</span></button>
+      <button class="preset" data-color="#FFD27F" style="background:#d6a75b"><span>Warm</span></button>
+      <button class="preset" data-color="#BBD7FF" style="background:#7ca7df"><span>Cool</span></button>
+    </div>
+  </section>
+
+
+
+  </div>
+
+  <div id="scenesSection" class="appSection">
+  <section class="card" style="margin-top:16px">
+    <h2>⭐ Favorites & Scenes</h2>
+    <div class="grid" style="margin-top:0">
+      <div>
+        <div class="labelrow"><span>Current setup</span><span class="value" id="currentSetup">—</span></div>
+        <div class="actions">
+          <button id="saveFavorite" class="btn">❤️ Save Favorite</button>
+          <button id="saveScene" class="btn secondary">＋ Save Scene</button>
+        </div>
+      </div>
+      <div>
+        <div class="labelrow"><span>Scene / Favorite name</span></div>
+        <input id="presetName" class="hex" placeholder="e.g. Gaming, Night, My Blue">
+      </div>
+    </div>
+    <div class="sceneToolbar"><div class="segmented"><button class="segBtn active" data-collection="all">All</button><button class="segBtn" data-collection="favorites">Favorites</button><button class="segBtn" data-collection="scenes">Scenes</button></div><span class="muted small"><span id="collectionCount">0</span> saved</span></div><div id="savedPresets" class="presetList" style="margin-top:14px"></div>
+  </section>
+
+  </section>
+  </div>
+
+  <div id="colorSection" class="appSection">
+  <section class="card" style="margin-top:16px">
+    <h2>🌈 Smooth Transition</h2>
+    <div class="grid" style="margin-top:0">
+      <div>
+        <div class="labelrow"><span>Transition duration</span><span class="value"><span id="transitionValue">1.0</span>s</span></div>
+        <input id="transitionDuration" type="range" min="0" max="5" step="0.1" value="1">
+      </div>
+      <div>
+        <div class="actions">
+          <button id="transitionTest" class="btn">Preview Current Color</button>
+          <button id="cancelTransition" class="btn secondary">Cancel</button>
+        </div>
+        <p class="tempNote">The browser interpolates RGB/brightness locally and rate-limits BLE writes. The bulb does not receive every animation frame.</p>
+      </div>
+    </div>
+  </section>
+
+  </section>
+  </div>
+
+
+  <div id="timerSection" class="appSection">
+    <section class="card" style="margin-top:16px">
+      <h2>⏱️ Auto OFF Timer</h2>
+      <div class="timerGrid">
+        <div>
+          <div class="timerHero">
+            <div>
+              <small class="muted">Current timer</small>
+              <div id="timerCountdown" class="timerBig">No timer</div>
+              <div id="timerState" class="timerState off">Inactive</div>
+            </div>
+            <span class="estimateTag">Page must stay open</span>
+          </div>
+          <div class="grid" style="margin-top:14px">
+            <div>
+              <div class="labelrow"><span>Quick timer</span><span class="value">minutes</span></div>
+              <div class="actions">
+                <button class="btn secondary" data-timer-min="5">5m</button>
+                <button class="btn secondary" data-timer-min="15">15m</button>
+                <button class="btn secondary" data-timer-min="30">30m</button>
+                <button class="btn secondary" data-timer-min="60">1h</button>
+                <button class="btn secondary" data-timer-min="120">2h</button>
+              </div>
+            </div>
+            <div>
+              <div class="labelrow"><span>Custom timer</span><span class="value">minutes</span></div>
+              <div class="actions">
+                <input id="customTimerMinutes" class="hex" type="number" min="1" max="1440" value="30" style="max-width:150px">
+                <button id="setCustomTimer" class="btn">Start</button>
+                <button id="cancelTimer" class="btn danger">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="labelrow"><span>Scheduled OFF</span><span class="value" id="scheduleStatus">Disabled</span></div>
+          <div class="scheduleRow">
+            <input id="offScheduleTime" class="hex" type="time" value="23:30">
+            <button id="saveOffSchedule" class="btn">Save</button>
+          </div>
+          <div class="actions" style="margin-top:10px">
+            <button id="toggleOffSchedule" class="btn secondary">Enable / Disable</button>
+            <button id="clearOffSchedule" class="btn danger">Clear</button>
+          </div>
+          <div class="notice">
+            The browser must remain open for the timer/schedule to send the OFF command. This is a software timer, not a hardware timer stored inside the bulb.
+          </div>
+        </div>
+      </div>
+      <div id="timerLog" class="notice" style="margin-top:14px">No timer configured.</div>
+    </section>
+  </div>
+
+  <div id="energySection" class="appSection">
+    <section class="card" style="margin-top:16px">
+      <div class="sectionHead"><div><h2>⚡ Energy & Cost</h2><p class="muted small" style="margin:4px 0 0">Estimated consumption based on ON time, brightness and the bulb's configured rated power.</p></div><span class="estimateTag">ESTIMATE</span></div>
+      <div class="grid" style="margin-top:16px">
+        <div>
+          <div class="labelrow"><span>Bulb rated power</span><span class="value"><span id="ratedPowerValue">9</span> W</span></div>
+          <input id="ratedPower" type="range" min="1" max="30" step="0.5" value="9">
+          <div class="actions" style="margin-top:8px"><input id="ratedPowerNumber" class="hex" type="number" min="1" max="100" step="0.5" value="9" style="max-width:130px"><span class="muted small" style="align-self:center">Use the bulb label/manual value if known.</span></div>
+        </div>
+        <div>
+          <div class="labelrow"><span>Electricity price</span><span class="value"><span id="energyPriceValue">1.20</span> MAD/kWh</span></div>
+          <input id="energyPrice" type="number" min="0" step="0.01" value="1.20" class="hex">
+          <div class="muted small" style="margin-top:8px">Set your actual tariff for a better cost estimate.</div>
+        </div>
+      </div>
+
+      <div class="energyCards" style="margin-top:16px">
+        <div class="energyCard"><small>Today</small><strong id="energyToday">0.000 kWh</strong></div>
+        <div class="energyCard"><small>This week</small><strong id="energyWeek">0.000 kWh</strong></div>
+        <div class="energyCard"><small>This month</small><strong id="energyMonth">0.000 kWh</strong></div>
+        <div class="energyCard"><small>Estimated cost</small><strong id="energyCost">0.00 MAD</strong></div>
+      </div>
+
+      <div class="grid" style="margin-top:16px">
+        <div class="notice">
+          <div class="labelrow"><span>Current estimated power</span><strong id="energyCurrentPower">0.00 W</strong></div>
+          <div class="meter"><i id="energyPowerMeter"></i></div>
+          <div class="muted small" style="margin-top:8px">Brightness is used as a simple linear estimate: rated power × brightness %. Color/temperature efficiency is not measured.</div>
+        </div>
+        <div class="notice">
+          <div class="labelrow"><span>ON time today</span><strong id="energyOnTime">0m</strong></div>
+          <div class="labelrow" style="margin-top:10px"><span>Tracking</span><strong id="energyTrackingState">Idle</strong></div>
+          <div class="actions" style="margin-top:10px"><button id="resetEnergy" class="btn danger">Reset Statistics</button></div>
+        </div>
+      </div>
+      <div class="notice" style="margin-top:14px">Important: this is an estimate, not a measurement. The BLE protocol we verified exposes light state/brightness but does not provide a power-meter reading from the bulb.</div>
+    </section>
+  </div>
+
+  <div id="historySection" class="appSection">
+  <section class="card" style="margin-top:16px">
+    <h2>🕘 History</h2>
+    <div class="actions">
+      <button id="clearHistory" class="btn secondary">Clear History</button>
+    </div>
+    <div id="historyList" style="margin-top:12px"></div>
+  </section>
+
+  </section>
+  </div>
+
+  <div id="musicSection" class="appSection">
+  <section class="card" style="margin-top:16px">
+    <h2>🎵 Music Reactive</h2>
+    <div class="grid" style="margin-top:0">
+      <div>
+        <div class="labelrow"><span>Audio source</span><span class="value" id="audioState">Stopped</span></div>
+        <div class="actions">
+          <button id="audioStart" class="btn">Start Microphone</button>
+          <button id="audioStop" class="btn secondary" disabled>Stop</button>
+        </div>
+        <div class="notice">The browser analyzes microphone audio locally with the Web Audio API. Audio is not uploaded.</div>
+      </div>
+      <div>
+        <div class="labelrow"><span>Mode</span></div>
+        <select id="musicMode" style="width:100%;background:#09111f;color:#fff;border:1px solid #30405d;border-radius:10px;padding:11px">
+          <option value="beat">Beat Sync</option>
+          <option value="pulse">Pulse</option>
+          <option value="spectrum">Spectrum</option>
+          <option value="ambient">Ambient</option>
+          <option value="party">Party</option>
+        </select>
+        <div class="labelrow" style="margin-top:14px"><span>Sensitivity</span><span class="value"><span id="sensValue">65</span>%</span></div>
+        <input id="sensitivity" type="range" min="0" max="100" value="65">
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
+      <div>
+        <div class="labelrow"><span>Audio energy</span><span id="energyValue" class="value">0%</span></div>
+        <input id="energy" type="range" min="0" max="100" value="0" disabled>
+      </div>
+      <div>
+        <div class="labelrow"><span>Beat activity</span><span id="beatValue" class="value">0%</span></div>
+        <input id="beat" type="range" min="0" max="100" value="0" disabled>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;background:#070c15;border:1px solid #25344e;border-radius:12px;padding:14px">
+      <canvas id="visualizer" width="900" height="150" style="width:100%;height:150px;display:block"></canvas>
+    </div>
+
+    <div class="labelrow" style="margin-top:16px">
+      <span>Music output brightness</span>
+      <span class="value"><span id="musicBrightValue">70</span>%</span>
+    </div>
+    <input id="musicBrightness" type="range" min="1" max="100" value="70">
+  </section>
+
+
+  <section class="card" style="margin-top:16px">
+    <h2>🌡️ Color Temperature</h2>
+    <div class="labelrow"><span>Temperature</span><span class="value"><span id="tempValue">—</span></span></div>
+    <input id="temperature" type="range" min="1700" max="6500" step="100" value="4000">
+    <div class="actions" style="margin-top:12px">
+      <button class="btn secondary" data-temp="2200">Candle</button>
+      <button class="btn secondary" data-temp="2700">Warm</button>
+      <button class="btn secondary" data-temp="4000">Neutral</button>
+      <button class="btn secondary" data-temp="5000">Cool</button>
+      <button class="btn secondary" data-temp="6500">Daylight</button>
+    </div>
+    <div class="notice">Color Temperature is verified on this Blue II. The controller uses the verified <code>CLTMP temperature,brightness</code> command.</div>
+  </section>
+
+
+  </section>
+  </div>
+
+  <div id="tempSection" class="appSection">
+  <section class="card" style="margin-top:16px">
+    <h2>🌡️ Color Temperature — Verified</h2>
+    <div class="notice">
+      <b>Verified on this bulb:</b> <code>CLTMP &lt;temperature&gt;,&lt;brightness&gt;</code>
+      is accepted by FFF1 and the bulb reports the same state through FFF6.
+    </div>
+    <div class="grid" style="margin-top:16px">
+      <div>
+        <div class="labelrow"><span>Target temperature</span><span class="value"><span id="ctTargetValue">4000</span>K</span></div>
+        <input id="ctTarget" type="range" min="1700" max="6500" step="100" value="4000">
+        <div class="actions" style="margin-top:10px">
+          <button class="btn secondary" data-ct="2200">2200K</button>
+          <button class="btn secondary" data-ct="2700">2700K</button>
+          <button class="btn secondary" data-ct="4000">4000K</button>
+          <button class="btn secondary" data-ct="5000">5000K</button>
+          <button class="btn secondary" data-ct="6500">6500K</button>
+        </div>
+      </div>
+      <div>
+        <div class="labelrow"><span>Command</span><span class="value">FFF1</span></div>
+        <input id="ctCommand" class="hex" value="CLTMP 4000,100," spellcheck="false">
+        <div class="actions" style="margin-top:10px">
+          <button id="ctSend" class="btn">Set Temperature</button>
+          <button id="ctQuery" class="btn secondary">Query Status</button>
+        </div>
+      </div>
+    </div>
+    <div class="notice" style="margin-top:14px">
+      Temperature control is now enabled. Commands are serialized through the BLE queue so rapid slider changes do not overlap GATT operations.
+    </div>
+    <div style="margin-top:14px">
+      <div class="muted small">Last CT action</div>
+      <pre id="ctProbeLog" style="margin-top:7px">No CT action yet.</pre>
+    </div>
+  </section>
+
+
+  </section>
+  </div>
+
+  <div id="flowSection" class="appSection">
+
+  <section class="card" style="margin-top:16px">
+    <h2>🧪 Raw FFF7 Test <span class="protocolBadge">Developer</span></h2>
+    <div class="notice">
+      This test sends only the verified FFF7 ASCII flow packets. No presets, music engine,
+      or background animation is involved.
+    </div>
+
+    <div class="grid" style="margin-top:14px">
+      <div>
+        <div class="labelrow"><span>Step duration</span><span class="value"><span id="rawFlowTimeValue">5</span>s</span></div>
+        <input id="rawFlowTime" type="range" min="1" max="10" value="5">
+      </div>
+      <div>
+        <div class="actions">
+          <button id="rawFlowTest" class="btn" disabled>▶️ Send RGB Flow Test</button>
+          <button id="rawFlowStop" class="btn danger" disabled>⏹️ Send STOP</button>
+        </div>
+      </div>
+    </div>
+
+    <pre id="rawFlowLog" class="log" style="margin-top:14px;min-height:100px">Ready. Connect first.</pre>
+    <div class="notice" style="margin-top:12px">
+      <strong>Automatic verification:</strong>
+      after START/STOP the app sends <code>S</code> through FFF5 and reads FFF6.
+      The <code>CF</code> field is displayed without guessing its meaning.
+    </div>
+    <div id="flowStatusVerify" class="notice" style="margin-top:8px">No verification yet.</div>
+  </section>
+
+
+  <section class="card" style="margin-top:16px">
+    <div class="sectionHead"><div><h2>✨ Basic Effects</h2><p class="muted small" style="margin:4px 0 0">Effects built from the verified FFF7 Color Flow protocol.</p></div><span class="protocolBadge">FFF7</span></div>
+    <div class="effectGrid" id="effectGrid">
+      <button class="effectCard active" data-effect="static"><span class="effectIcon">◉</span><strong>Static</strong><small>Single color</small></button>
+      <button class="effectCard" data-effect="breathing"><span class="effectIcon">〰</span><strong>Breathing</strong><small>Soft fade</small></button>
+      <button class="effectCard" data-effect="strobing"><span class="effectIcon">⚡</span><strong>Strobing</strong><small>Flash</small></button>
+      <button class="effectCard" data-effect="cycle"><span class="effectIcon">◌</span><strong>Color Cycle</strong><small>Color loop</small></button>
+      <button class="effectCard" data-effect="rainbow"><span class="effectIcon">🌈</span><strong>Rainbow</strong><small>Spectrum</small></button>
+      <button class="effectCard" data-effect="starry"><span class="effectIcon">✦</span><strong>Starry Night</strong><small>Twinkle</small></button>
+      <button class="effectCard" data-effect="music"><span class="effectIcon">▥</span><strong>Music</strong><small>Audio reactive</small></button>
+      <button class="effectCard" data-effect="smart"><span class="effectIcon">◉</span><strong>Smart</strong><small>Adaptive loop</small></button>
+      <button class="effectCard" data-effect="adaptive"><span class="effectIcon">⊞</span><strong>Adaptive Color</strong><small>Auto palette</small></button>
+      <button class="effectCard" data-effect="dark"><span class="effectIcon">⊘</span><strong>Dark (Off)</strong><small>Turn off</small></button>
+      <button class="effectCard" data-effect="aura"><span class="effectIcon">✧</span><strong>AI Aura Lighting</strong><small>Ambient</small></button>
+    </div>
+    <div class="effectControls"><div><div class="labelrow"><span>Effect speed</span><span class="value"><span id="effectSpeedValue">2</span>s</span></div><input id="effectSpeed" type="range" min="1" max="10" value="2"></div><div class="actions"><button id="effectApply" class="btn">▶️ Apply Effect</button><button id="effectStop" class="btn danger">⏹️ Stop</button></div></div>
+    <div id="effectStatus" class="notice" style="margin-top:12px">Static selected.</div>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>🌊 Color Flow</h2>
+    <div class="grid" style="margin-top:0">
+      <div>
+        <div class="labelrow"><span>Preset</span><span class="value" id="flowState">Stopped</span></div>
+        <div class="actions">
+          <button id="flowProbe" class="btn">🔎 Probe FFF7</button>
+          <button id="flowRainbow" class="btn secondary" disabled>🌈 Rainbow</button>
+          <button id="flowParty" class="btn secondary" disabled>🎉 Party</button>
+          <button id="flowWarm" class="btn secondary" disabled>🔥 Warm</button>
+          <button id="flowStart" class="btn" disabled>Start Flow</button>
+          <button id="flowStop" class="btn danger" disabled>Stop Flow</button>
+        </div>
+      </div>
+      <div>
+        <div class="labelrow"><span>Step duration</span><span class="value"><span id="flowTimeValue">2</span>s</span></div>
+        <input id="flowTime" type="range" min="1" max="10" value="2">
+        <div class="notice">
+          <strong>FFF7 diagnostic mode.</strong>
+          Yeelight's protocol defines FFF7 as a 20-byte Read/Write ASCII characteristic.
+          Before sending Flow commands, this version explicitly locates FFF7 and reports
+          its UUID and properties.
+        </div>
+        <pre id="flowDiag" class="log" style="margin-top:12px;min-height:70px">FFF7 not probed yet.</pre>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  
+<section id="backupSection" class="appSection">
+  <section class="card">
+    <div class="sectionHead">
+      <div>
+        <h2>💾 Backup & Data</h2>
+        <p class="muted small" style="margin:4px 0 0">Export your local settings, Favorites, Scenes, schedules and energy history. No cloud account required.</p>
+      </div>
+      <span class="protocolBadge">LOCAL</span>
+    </div>
+
+    <div class="backupGrid" style="margin-top:14px">
+      <div class="backupStat"><small>Favorites</small><b id="backupFavorites">0</b></div>
+      <div class="backupStat"><small>Scenes</small><b id="backupScenes">0</b></div>
+      <div class="backupStat"><small>Energy records</small><b id="backupEnergy">0</b></div>
+    </div>
+
+    <div class="actions" style="margin-top:14px">
+      <button id="exportBackup" class="btn">⬇️ Export Backup</button>
+      <button id="importBackup" class="btn secondary">⬆️ Import Backup</button>
+      <input id="backupFile" type="file" accept="application/json,.json" hidden>
+      <button id="clearLocalData" class="btn danger">Clear Local Data</button>
+    </div>
+
+    <div class="notice" style="margin-top:12px">
+      Backup is a local JSON file. Import replaces the app's local Favorites, Scenes, schedules and energy data after confirmation.
+    </div>
+  </section>
+</section>
+
+<section id="aboutSection" class="appSection">
+  <section class="card">
+    <div class="sectionHead">
+      <div>
+        <h2>ℹ️ About</h2>
+        <p class="muted small" style="margin:4px 0 0">Stable local controller for Yeelight Blue II over Bluetooth Low Energy.</p>
+      </div>
+      <span class="protocolBadge">V14</span>
+    </div>
+
+    <div class="v14-about-grid" style="margin-top:14px">
+      <div class="v14-about-card">
+        <strong>🔵 Connection</strong>
+        <span class="v14-section-note">Web Bluetooth through Chrome. Refresh requires a normal Connect action.</span>
+      </div>
+      <div class="v14-about-card">
+        <strong>🌈 Color Flow</strong>
+        <span class="v14-section-note">Built on the verified FFF7 flow path, with CB start and CE stop.</span>
+      </div>
+      <div class="v14-about-card">
+        <strong>⚡ Energy</strong>
+        <span class="v14-section-note">Consumption is estimated from configured power, brightness and usage time.</span>
+      </div>
+    </div>
+
+    <div class="notice" style="margin-top:12px">
+      <strong>Protocol safety:</strong> V14 does not introduce new undocumented BLE commands.
+      The verified BLE core remains the foundation.
+    </div>
+  </section>
+</section>
+<div id="developerSection" class="appSection">
+  <div class="developerOnly notice"><b>Developer Mode</b><br>Raw BLE diagnostics and protocol probes are kept here. Normal control should use the main tabs.</div>
+  
+  
+<section class="card" style="margin-top:16px">
+  <h2>🎨 Custom Color Flow</h2>
+  <div class="notice">
+    Stable Flow builder using the verified <code>FFF7</code> protocol.
+    Each step is encoded as <code>N,R,G,B,L,T</code> and padded to 20 bytes.
+  </div>
+
+  <div class="grid" style="margin-top:14px">
+    <div>
+      <div class="labelrow"><span>Step duration</span><span class="value"><span id="customFlowTimeValue">5</span>s</span></div>
+      <input id="customFlowTime" type="range" min="1" max="10" value="5">
+    </div>
+    <div>
+      <div class="labelrow"><span>Loops</span><span class="value"><span id="customFlowLoopsValue">0</span></span></div>
+      <input id="customFlowLoops" type="range" min="0" max="20" value="0">
+      <small>0 = continuous start; loop count is not sent to firmware</small>
+    </div>
+  </div>
+
+  <div id="customFlowSteps" style="margin-top:14px"></div>
+
+  <div class="actions" style="margin-top:14px">
+    <button id="customFlowAdd" class="btn secondary">＋ Add Color</button>
+    <button id="customFlowStart" class="btn">▶️ Start Custom Flow</button>
+    <button id="customFlowStop" class="btn danger">⏹️ Stop</button>
+  </div>
+
+  <pre id="customFlowLog" class="log" style="margin-top:12px;min-height:70px">Add colors, then start the flow.</pre>
+</section>
+
+<section class="card" style="margin-top:16px">
+    <h2>📡 GATT Characteristic Inventory</h2>
+    <div class="notice">Open Developer mode and review the <code>GATT_CHARACTERISTIC</code>, <code>FFF7_DISCOVERED</code>, or <code>FFF7_NOT_FOUND</code> entries in the log.</div>
+  </section>
+  <section class="card" style="margin-top:16px">
+    <h2>🧬 Verified Protocol</h2>
+    <div class="miniStatus">
+      <div><small>Control</small><strong>FFF1</strong><span class="protocolBadge">Verified</span></div>
+      <div><small>Status Query</small><strong>FFF5</strong><span class="protocolBadge">Verified</span></div>
+      <div><small>Status Response</small><strong>FFF6</strong><span class="protocolBadge">Verified</span></div>
+      <div><small>Color Flow</small><strong>FFF7</strong><span class="protocolBadge" style="background:#12351f;color:#4ade80">Verified</span></div>
+    </div>
+    <div class="notice">
+      Verified commands: RGB/brightness via FFF1 and <code>CLTMP temperature,brightness</code>
+      via FFF1. FFF6 status responses are parsed. FFF7 Color Flow is verified using the official 20-byte protocol.
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Status</h2>
+    <div class="grid" style="margin-top:0">
+      <div><div class="muted">Raw response</div><div id="rawStatus" style="margin-top:6px;font-weight:750">—</div></div>
+      <div><div class="muted">Detected values</div><div id="detected" style="margin-top:6px;font-weight:750">—</div></div>
+    </div>
+    <div class="notice">Status responses from this Blue II firmware have been observed as <code>CLTMP 6037,73,</code>. The UI displays this experimentally and does not yet assume the exact meaning of every field.</div>
+  </section>
+
+  <details class="card debug">
+    <summary>Debug / BLE Communication Log</summary>
+    <div class="actions" style="margin:14px 0"><button id="clearLog" class="btn secondary">Clear</button><button id="export" class="btn secondary">Export JSON</button></div>
+    <pre id="log">Ready.</pre>
+  </details>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const SERVICE="0000fff0-0000-1000-8000-00805f9b34fb";
+let device=null,server=null,chars=new Map(),records=[];
+let currentColor=localStorage.getItem("yb2-color")||"#ffffff";
+let brightness=Number(localStorage.getItem("yb2-brightness")||100);
+let isOn=false;
+
+function ts(){return new Date().toISOString()}
+function hex(data){return [...new Uint8Array(data)].map(b=>b.toString(16).padStart(2,"0").toUpperCase()).join(" ")}
+function log(type,data={}){
+ const r={timestamp:ts(),type,...data};records.push(r);
+ $("log").textContent+=`\\n[${r.timestamp}] ${type}${r.ascii!==undefined?" | ASCII: "+r.ascii:""}${r.hex?" | HEX: "+r.hex:""}${r.message?" | "+r.message:""}`;
+ $("log").scrollTop=$("log").scrollHeight;
+}
+function pad18(s){if(s.length>18)throw new Error("Command exceeds FFF1's 18-byte payload.");return s+",".repeat(18-s.length)}
+function setConnection(text,good=false,bad=false){
+ $("connText").textContent=text;$("dot").className="dot "+(good?"good":bad?"bad":"");
+}
+function rgb(hexColor){
+ const h=hexColor.replace("#","");return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]
+}
+function setUI(){
+ $("color").value=currentColor;$("hex").value=currentColor.toUpperCase();$("brightness").value=brightness;$("brightValue").textContent=brightness;
+ $("state").textContent=isOn?"ON":"OFF";$("power").classList.toggle("on",isOn);
+ $("heroGlow").style.opacity=isOn?".18":".07";$("heroGlow").style.background=currentColor;
+}
+setUI();
+
+let bleQueue=[];
+let bleBusy=false;
+let bleSession=0;
+let bleStopped=true;
+
+function isBLEConnected(){
+  return !!(device && device.gatt && device.gatt.connected && server);
+}
+function updateQueueUI(){
+  const n=bleQueue.length+(bleBusy?1:0);
+  const q=$("queueText");
+  if(q){q.textContent=`Queue: ${n}`;q.className=n?"queueBusy":"queueOk";}
+  if($("homeQueue"))$("homeQueue").textContent=`Queue ${n}`;
+}
+function clearBLEQueue(reason="clear"){
+  const pending=bleQueue.splice(0);
+  pending.forEach(item=>{try{item.reject(new Error(`BLE command cancelled: ${reason}`))}catch(_){}});
+  updateQueueUI(); log("QUEUE_CLEAR",{reason});
+}
+function startBLESession(){
+  bleSession++;
+  bleStopped=false;
+  clearBLEQueue("new-session");
+}
+function stopBLESession(reason="disconnect"){
+  bleStopped=true; bleSession++;
+  if(typeof transitionTimer!=="undefined" && transitionTimer){clearInterval(transitionTimer);transitionTimer=null;}
+  if(typeof stopMusicEngine==="function")stopMusicEngine();
+  clearBLEQueue(reason);
+  updateQueueUI();
+}
+function enqueueBLE(task,options={}){
+  const key=options.key||null;
+  if(!isBLEConnected() || bleStopped)return Promise.reject(new Error("Bluetooth is not connected."));
+  return new Promise((resolve,reject)=>{
+    if(key){
+      for(let i=bleQueue.length-1;i>=0;i--){
+        if(bleQueue[i].key===key){const old=bleQueue.splice(i,1)[0];try{old.resolve(false)}catch(_){}}
+      }
+    }
+    if(bleQueue.length>=5){const old=bleQueue.shift();try{old.resolve(false)}catch(_){}}
+    bleQueue.push({task,resolve,reject,key,session:bleSession});
+    updateQueueUI(); processBLEQueue();
+  });
+}
+async function processBLEQueue(){
+  if(bleBusy)return;
+  if(!bleQueue.length){updateQueueUI();return;}
+  if(!isBLEConnected() || bleStopped){clearBLEQueue("not-connected");return;}
+  bleBusy=true;
+  const item=bleQueue.shift(), session=item.session;
+  updateQueueUI();
+  try{
+    if(session!==bleSession || !isBLEConnected() || bleStopped)throw new Error("BLE session is no longer active.");
+    item.resolve(await item.task());
+  }catch(e){item.reject(e);log("BLE_ERROR",{message:e.message});}
+  finally{
+    bleBusy=false; updateQueueUI();
+    if(bleQueue.length && isBLEConnected() && !bleStopped)setTimeout(processBLEQueue,60);
+    else if(!isBLEConnected() || bleStopped)clearBLEQueue("session-ended");
+  }
+}
+async function sendControl(command,label,options={}){
+  const padded=pad18(command), session=bleSession;
+  return enqueueBLE(async()=>{
+    if(session!==bleSession || !isBLEConnected() || bleStopped)throw new Error("Bluetooth session is no longer active.");
+    const ch=chars.get("fff1");
+    if(!ch)throw new Error("FFF1 Control characteristic not found.");
+    const bytes=new TextEncoder().encode(padded);
+    if(ch.properties.write)await ch.writeValue(bytes);
+    else if(ch.properties.writeWithoutResponse)await ch.writeValueWithoutResponse(bytes);
+    else throw new Error("FFF1 is not writable.");
+    log("CONTROL",{ascii:padded,hex:hex(bytes),message:label});
+    return true;
+  },{key:options.key||null});
+}
+async function power(on){
+ brightness=on?(brightness||100):0;
+ isOn=on;
+ setUI();
+ await sendControl(`,,,${on?brightness:0}`,"Power "+(on?"ON":"OFF"));
+ localStorage.setItem("yb2-brightness",String(brightness));
+}
+
+async function applyRGB(color,level=brightness){
+ const [r,g,b]=rgb(color);brightness=level;
+ await sendControl(`${r},${g},${b},${level}`,"RGB "+color+" @ "+level+"%");
+ currentColor=color;isOn=level>0;setUI();
+ localStorage.setItem("yb2-color",currentColor);localStorage.setItem("yb2-brightness",String(brightness));
+}
+
+
+
+// ---------- V14 Stable ----------
+
+// ---------- V14 Stable compatibility helpers ----------
+function v13Toast(message,type="success",ms=2600){
+  if(typeof toast==="function"){
+    toast(message, type==="error" ? "bad" : type==="warn" ? "warn" : "good");
+  }else{
+    console.log(`[Yeelight] ${message}`);
+  }
+}
+function v13SetConnectionUI(){
+  // No extra V13 connection banner/reconnect UI.
+  // Keep the existing application's connection indicator untouched.
+}
+
+
+
+
+
+function v13RefreshBackupStats(){
+  const count=(id,val)=>{const el=$(id);if(el)el.textContent=String(val)};
+  let energy=[];
+  try{energy=JSON.parse(localStorage.getItem("yb2-energy-history")||"[]")}catch{}
+  count("backupFavorites",JSON.parse(localStorage.getItem("yb2-favorites")||"[]").length);
+  count("backupScenes",JSON.parse(localStorage.getItem("yb2-scenes")||"[]").length);
+  count("backupEnergy",Array.isArray(energy)?energy.length:0);
+}
+
+function v13CollectBackup(){
+  const keys=[
+    "yb2-favorites","yb2-scenes","yb2-history","yb2-energy-history",
+    "yb2-timer","yb2-schedule","yb2-settings"
+  ];
+  const data={version:13,exportedAt:new Date().toISOString(),app:"Yeelight Blue II Web Controller",storage:{}};
+  keys.forEach(k=>{const v=localStorage.getItem(k);if(v!==null)data.storage[k]=v});
+  return data;
+}
+
+$("exportBackup")?.addEventListener("click",()=>{
+  try{
+    const data=v13CollectBackup();
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download=`yeelight-blue2-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    v13Toast("Backup exported.");
+  }catch(e){v13Toast("Backup export failed: "+e.message,"error",4200)}
+});
+
+$("importBackup")?.addEventListener("click",()=>$("backupFile")?.click());
+$("backupFile")?.addEventListener("change",async e=>{
+  const file=e.target.files?.[0]; if(!file)return;
+  try{
+    const data=JSON.parse(await file.text());
+    if(!data || data.app!=="Yeelight Blue II Web Controller" || !data.storage)
+      throw new Error("Invalid Yeelight Controller backup.");
+    if(!confirm("Import this backup? Existing local Favorites, Scenes and saved data may be replaced."))return;
+    Object.entries(data.storage).forEach(([k,v])=>localStorage.setItem(k,String(v)));
+    if(typeof favorites!=="undefined")favorites=JSON.parse(localStorage.getItem("yb2-favorites")||"[]");
+    if(typeof scenes!=="undefined")scenes=JSON.parse(localStorage.getItem("yb2-scenes")||"[]");
+    if(typeof history!=="undefined")history=JSON.parse(localStorage.getItem("yb2-history")||"[]");
+    if(typeof renderPresets==="function")renderPresets();
+    if(typeof renderHistory==="function")renderHistory();
+    v13RefreshBackupStats();
+    const importedFav=JSON.parse(localStorage.getItem("yb2-favorites")||"[]");
+    const importedScenes=JSON.parse(localStorage.getItem("yb2-scenes")||"[]");
+    const importedHistory=JSON.parse(localStorage.getItem("yb2-history")||"[]");
+    const importedOk=(
+      Array.isArray(importedFav) &&
+      Array.isArray(importedScenes) &&
+      Array.isArray(importedHistory)
+    );
+    v13Toast(importedOk ? "Backup imported successfully." : "Backup imported with verification warnings.","success",3200);
+  }catch(err){v13Toast("Import failed: "+err.message,"error",4500)}
+  e.target.value="";
+});
+
+$("clearLocalData")?.addEventListener("click",()=>{
+  if(!confirm("Clear all local app data? This removes Favorites, Scenes, History, Energy, Timer and saved settings from this browser."))return;
+  const prefixKeys=[];
+  for(let i=0;i<localStorage.length;i++)prefixKeys.push(localStorage.key(i));
+  prefixKeys.filter(k=>k && k.startsWith("yb2-")).forEach(k=>localStorage.removeItem(k));
+  v13Toast("Local app data cleared.","warn");
+  setTimeout(()=>location.reload(),500);
+});
+
+v13RefreshBackupStats();
+v13SetConnectionUI();
+
+
+
+
+// ---------- V12 Timer + Energy ----------
+let offTimerId=null;
+let offTimerInterval=null;
+let offTimerEndsAt=null;
+let offSchedule={enabled:false,time:"23:30"};
+let offScheduleInterval=null;
+
+const ENERGY_KEY="yb2-energy-v12.1";
+let energyData=JSON.parse(localStorage.getItem(ENERGY_KEY)||"null")||{
+  date:new Date().toISOString().slice(0,10),
+  weekStart:getWeekStart(new Date()).toISOString().slice(0,10),
+  month:new Date().toISOString().slice(0,7),
+  todayWh:0,weekWh:0,monthWh:0,onSecondsToday:0,lastSample:Date.now(),
+  ratedPower:9,price:1.2
+};
+
+function getWeekStart(d){
+  const x=new Date(d); const day=x.getDay(); const diff=(day+6)%7;
+  x.setHours(0,0,0,0); x.setDate(x.getDate()-diff); return x;
+}
+function rollEnergyPeriods(){
+  const now=new Date(),date=now.toISOString().slice(0,10),week=getWeekStart(now).toISOString().slice(0,10),month=now.toISOString().slice(0,7);
+  if(energyData.date!==date){energyData.todayWh=0;energyData.onSecondsToday=0;energyData.date=date;}
+  if(energyData.weekStart!==week){energyData.weekWh=0;energyData.weekStart=week;}
+  if(energyData.month!==month){energyData.monthWh=0;energyData.month=month;}
+}
+function getEnergyBrightness(){
+  try{
+    if(typeof flowRunning!=="undefined" && flowRunning && Array.isArray(flowSteps) && flowSteps.length){
+      return flowSteps.reduce((a,s)=>a+Number(s.l||0),0)/flowSteps.length;
+    }
+  }catch(_){}
+  return Number(brightness)||0;
+}
+function estimatedWatts(){
+  if(!isOn)return 0;
+  return Math.max(0,Number(energyData.ratedPower)||9)*(getEnergyBrightness()/100);
+}
+function sampleEnergy(){
+  rollEnergyPeriods();
+  const now=Date.now(),last=Number(energyData.lastSample)||now;
+  const dt=Math.max(0,Math.min(now-last,120000));
+  const watts=estimatedWatts();
+  const wh=watts*dt/3600000;
+  energyData.todayWh+=wh;energyData.weekWh+=wh;energyData.monthWh+=wh;
+  if(isOn)energyData.onSecondsToday+=dt/1000;
+  energyData.lastSample=now;
+  localStorage.setItem(ENERGY_KEY,JSON.stringify(energyData));
+  renderEnergy();
+}
+function fmtKwh(wh){return (wh/1000).toFixed(3)+" kWh"}
+function fmtDuration(sec){
+  sec=Math.max(0,Math.floor(sec)); const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);
+  if(h)return `${h}h ${m}m`; return `${m}m`;
+}
+function renderEnergy(){
+  rollEnergyPeriods();
+  const price=Number(energyData.price)||0;
+  if($("energyToday"))$("energyToday").textContent=fmtKwh(energyData.todayWh);
+  if($("energyWeek"))$("energyWeek").textContent=fmtKwh(energyData.weekWh);
+  if($("energyMonth"))$("energyMonth").textContent=fmtKwh(energyData.monthWh);
+  if($("energyCost"))$("energyCost").textContent=((energyData.monthWh/1000)*price).toFixed(2)+" MAD";
+  const watts=estimatedWatts(),rated=Math.max(1,Number(energyData.ratedPower)||9);
+  if($("energyCurrentPower"))$("energyCurrentPower").textContent=watts.toFixed(2)+" W";
+  if($("energyPowerMeter"))$("energyPowerMeter").style.width=Math.min(100,watts/rated*100)+"%";
+  if($("energyOnTime"))$("energyOnTime").textContent=fmtDuration(energyData.onSecondsToday);
+  if($("energyTrackingState"))$("energyTrackingState").textContent=isOn?"Tracking":"Idle";
+  if($("ratedPower"))$("ratedPower").value=energyData.ratedPower;
+  if($("ratedPowerNumber"))$("ratedPowerNumber").value=energyData.ratedPower;
+  if($("ratedPowerValue"))$("ratedPowerValue").textContent=Number(energyData.ratedPower).toFixed(energyData.ratedPower%1?1:0);
+  if($("energyPrice"))$("energyPrice").value=energyData.price;
+  if($("energyPriceValue"))$("energyPriceValue").textContent=Number(energyData.price).toFixed(2);
+}
+function setEnergyRatedPower(v){
+  v=Math.max(1,Math.min(100,Number(v)||9));energyData.ratedPower=v;localStorage.setItem(ENERGY_KEY,JSON.stringify(energyData));renderEnergy();
+}
+function setEnergyPrice(v){
+  v=Math.max(0,Number(v)||0);energyData.price=v;localStorage.setItem(ENERGY_KEY,JSON.stringify(energyData));renderEnergy();
+}
+function restoreAutoOff(){
+  try{
+    const saved=JSON.parse(localStorage.getItem("yb2-off-timer")||"null");
+    if(!saved?.endsAt)return;
+    const remaining=saved.endsAt-Date.now();
+    if(remaining<=0){localStorage.removeItem("yb2-off-timer");return;}
+    offTimerEndsAt=saved.endsAt;
+    offTimerId=setTimeout(async()=>{
+      try{
+        if(isOn){
+          if(!isBLEConnected()) throw new Error("Saved timer expired, but Bluetooth is disconnected. connect again and turn the light off.");
+          await power(false);toast("Timer complete — light turned OFF","good");
+        }
+        cancelAutoOff(false);
+      }catch(e){log("TIMER_ERROR",{message:e.message});}
+    },remaining);
+    offTimerInterval=setInterval(renderTimer,1000);
+    renderTimer();
+  }catch(_){}
+}
+
+function loadOffSchedule(){
+  try{offSchedule=JSON.parse(localStorage.getItem("yb2-off-schedule")||"null")||offSchedule}catch(_){}
+  if($("offScheduleTime"))$("offScheduleTime").value=offSchedule.time||"23:30";
+  renderScheduleStatus();
+}
+function saveOffSchedule(){
+  offSchedule.time=$("offScheduleTime").value||"23:30";offSchedule.enabled=true;
+  localStorage.setItem("yb2-off-schedule",JSON.stringify(offSchedule));renderScheduleStatus();toast("Daily OFF schedule enabled","good");
+}
+function renderScheduleStatus(){
+  if($("scheduleStatus"))$("scheduleStatus").textContent=offSchedule.enabled?`Enabled · ${offSchedule.time}`:"Disabled";
+  if($("timerLog") && offSchedule.enabled)$("timerLog").textContent=`Daily OFF scheduled for ${offSchedule.time}.`;
+}
+function clearOffSchedule(){offSchedule={enabled:false,time:offSchedule.time||"23:30"};localStorage.setItem("yb2-off-schedule",JSON.stringify(offSchedule));renderScheduleStatus();}
+function startAutoOff(minutes){
+  minutes=Math.max(1,Math.min(1440,Number(minutes)||0));
+  if(offTimerId)clearTimeout(offTimerId); if(offTimerInterval)clearInterval(offTimerInterval);
+  offTimerEndsAt=Date.now()+minutes*60000;
+  localStorage.setItem("yb2-off-timer",JSON.stringify({endsAt:offTimerEndsAt,minutes}));
+  offTimerId=setTimeout(async()=>{
+    try{
+      if(isOn){
+        if(!isBLEConnected())throw new Error("Timer expired, but Bluetooth is disconnected. connect again and turn the light off.");
+        await power(false);toast("Timer complete — light turned OFF","good");
+      }
+      cancelAutoOff(false);
+    }catch(e){log("TIMER_ERROR",{message:e.message});if($("timerLog"))$("timerLog").textContent=e.message;}
+  },minutes*60000);
+  offTimerInterval=setInterval(renderTimer,1000);renderTimer();
+  if($("timerLog"))$("timerLog").textContent=`Auto OFF set for ${minutes} minute${minutes===1?"":"s"}.`;
+}
+function cancelAutoOff(show=true){
+  if(offTimerId)clearTimeout(offTimerId);if(offTimerInterval)clearInterval(offTimerInterval);
+  offTimerId=null;offTimerInterval=null;offTimerEndsAt=null;
+  localStorage.removeItem("yb2-off-timer");
+  renderTimer();
+  if(show&&$("timerLog"))$("timerLog").textContent="Auto OFF timer cancelled.";
+}
+function renderTimer(){
+  if(!$('timerCountdown'))return;
+  if(!offTimerEndsAt){$("timerCountdown").textContent="No timer";$("timerState").textContent="Inactive";$("timerState").classList.add("off");return;}
+  const ms=Math.max(0,offTimerEndsAt-Date.now()),sec=Math.ceil(ms/1000),h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),ss=sec%60;
+  $("timerCountdown").textContent=h?`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(ss).padStart(2,"0")}`:`${String(m).padStart(2,"0")}:${String(ss).padStart(2,"0")}`;
+  $("timerState").textContent="Active · OFF at end";$("timerState").classList.remove("off");
+}
+function checkOffSchedule(){
+  if(!offSchedule.enabled)return;
+  const now=new Date(),[hh,mm]=String(offSchedule.time).split(":").map(Number);
+  if(now.getHours()!==hh||now.getMinutes()!==mm)return;
+  const key=`yb2-schedule-fired-${now.toISOString().slice(0,10)}`;
+  if(localStorage.getItem(key))return;
+  localStorage.setItem(key,"1");
+  if(isOn){
+    if(isBLEConnected())power(false).then(()=>toast("Scheduled OFF executed","good")).catch(e=>log("SCHEDULE_ERROR",{message:e.message}));
+    else if($("timerLog"))$("timerLog").textContent="Schedule reached, but Bluetooth is disconnected.";
+  }
+}
+
+// Wrap the verified control functions without changing their BLE protocol.
+const __v12Power=power;
+power=async function(on){
+  const result=await __v12Power(on);sampleEnergy();return result;
+};
+const __v12ApplyRGB=applyRGB;
+applyRGB=async function(color,level=brightness){
+  const result=await __v12ApplyRGB(color,level);sampleEnergy();return result;
+};
+const __v12StartFlow=startColorFlow;
+startColorFlow=async function(){const r=await __v12StartFlow();sampleEnergy();return r;};
+const __v12StopFlow=stopColorFlow;
+stopColorFlow=async function(){const r=await __v12StopFlow();sampleEnergy();return r;};
+
+restoreAutoOff();
+loadOffSchedule();renderEnergy();
+setInterval(sampleEnergy,15000);
+setInterval(checkOffSchedule,1000);
+
+$("ratedPower")?.addEventListener("input",e=>setEnergyRatedPower(e.target.value));
+$("ratedPowerNumber")?.addEventListener("change",e=>setEnergyRatedPower(e.target.value));
+$("energyPrice")?.addEventListener("change",e=>setEnergyPrice(e.target.value));
+$("resetEnergy")?.addEventListener("click",()=>{
+  if(!confirm("Reset energy statistics?"))return;
+  energyData.todayWh=0;energyData.weekWh=0;energyData.monthWh=0;energyData.onSecondsToday=0;energyData.lastSample=Date.now();
+  localStorage.setItem(ENERGY_KEY,JSON.stringify(energyData));renderEnergy();
+});
+document.querySelectorAll("[data-timer-min]").forEach(b=>b.addEventListener("click",()=>startAutoOff(Number(b.dataset.timerMin))));
+$("setCustomTimer")?.addEventListener("click",()=>startAutoOff($("customTimerMinutes").value));
+$("cancelTimer")?.addEventListener("click",()=>cancelAutoOff(true));
+$("saveOffSchedule")?.addEventListener("click",saveOffSchedule);
+$("toggleOffSchedule")?.addEventListener("click",()=>{offSchedule.enabled=!offSchedule.enabled;localStorage.setItem("yb2-off-schedule",JSON.stringify(offSchedule));renderScheduleStatus();toast(offSchedule.enabled?"Daily OFF schedule enabled":"Daily OFF schedule disabled",offSchedule.enabled?"good":"info")});
+$("clearOffSchedule")?.addEventListener("click",clearOffSchedule);
+window.addEventListener("beforeunload",()=>{sampleEnergy();});
+
+async function refreshStatus(){
+ const ch=chars.get("fff5");if(!ch)throw new Error("FFF5 Status Query characteristic not found.");
+ return enqueueBLE(async()=>{
+   const bytes=new TextEncoder().encode("S");
+   if(ch.properties.write) await ch.writeValue(bytes);
+   else if(ch.properties.writeWithoutResponse) await ch.writeValueWithoutResponse(bytes);
+   log("STATUS_QUERY",{ascii:"S",hex:hex(bytes)});
+ });
+}
+
+async function subscribeStatus(){
+ const ch=chars.get("fff6");if(!ch)return;
+ try{
+   await ch.startNotifications();
+   ch.addEventListener("characteristicvaluechanged",e=>{
+     const text=new TextDecoder().decode(e.target.value).replace(/,+$/,"");
+     $("rawStatus").textContent=text||"—";
+     const m=text.match(/CLTMP\\s+(\\d+)\\s*,\\s*(\\d+)/i);
+     $("detected").textContent=m?`Temperature? ${m[1]} · Brightness? ${m[2]}%`:"Raw format not parsed";
+     log("STATUS_NOTIFY",{ascii:text,hex:hex(e.target.value)});
+   });
+   log("SUBSCRIBE",{message:"Subscribed to FFF6 Status Response"});
+ }catch(e){log("ERROR",{message:"FFF6 subscribe failed: "+e.message})}
+}
+
+async function discover(){
+  if(!server || !isBLEConnected()) throw new Error("GATT server is not connected.");
+
+  // The Blue II can occasionally expose the service before all custom
+  // characteristics are immediately retrievable. Discover the critical
+  // characteristics explicitly, with a short retry window.
+  const critical={
+    fff1:"0000fff1-0000-1000-8000-00805f9b34fb",
+    fff5:"0000fff5-0000-1000-8000-00805f9b34fb",
+    fff6:"0000fff6-0000-1000-8000-00805f9b34fb",
+    fff7:"0000fff7-0000-1000-8000-00805f9b34fb"
+  };
+
+  let custom=null;
+  let lastError=null;
+  for(let attempt=1;attempt<=4;attempt++){
+    try{
+      if(!isBLEConnected()) throw new Error("GATT disconnected during discovery.");
+      custom=await server.getPrimaryService(SERVICE);
+      for(const [short,uuid] of Object.entries(critical)){
+        try{
+          const ch=await custom.getCharacteristic(uuid);
+          chars.set(short,ch);
+          log("GATT_CRITICAL_READY",{
+            attempt,short,uuid,
+            properties:{
+              read:!!ch.properties.read,
+              write:!!ch.properties.write,
+              writeWithoutResponse:!!ch.properties.writeWithoutResponse,
+              notify:!!ch.properties.notify,
+              indicate:!!ch.properties.indicate
+            }
+          });
+        }catch(e){
+          lastError=e;
+          log("GATT_CRITICAL_RETRY",{
+            attempt,short,uuid,message:e.message
+          });
+        }
+      }
+      if(chars.has("fff1") && chars.has("fff5") && chars.has("fff6") && chars.has("fff7")) break;
+    }catch(e){
+      lastError=e;
+      log("GATT_SERVICE_RETRY",{attempt,message:e.message});
+    }
+    if(attempt<4) await new Promise(r=>setTimeout(r,250*attempt));
+  }
+
+  // Enumerate the rest for Developer Mode, but never let one optional
+  // characteristic break the whole connection.
+  try{
+    const services=await server.getPrimaryServices();
+    for(const service of services){
+      let list=[];
+      try{list=await service.getCharacteristics()}catch(e){
+        log("ERROR",{message:`Characteristic discovery failed for ${service.uuid}: ${e.message}`});
+        continue;
+      }
+      for(const ch of list){
+        const uuid=ch.uuid.toLowerCase();
+        const k=uuid.startsWith("0000") ? uuid.slice(4,8) : uuid;
+        chars.set(k,ch);
+        log("GATT_CHARACTERISTIC",{
+          service:service.uuid,uuid:ch.uuid,short:k,
+          properties:{
+            read:!!ch.properties.read,
+            write:!!ch.properties.write,
+            writeWithoutResponse:!!ch.properties.writeWithoutResponse,
+            notify:!!ch.properties.notify,
+            indicate:!!ch.properties.indicate
+          }
+        });
+      }
+    }
+  }catch(e){
+    log("ERROR",{message:"Optional GATT inventory failed: "+e.message});
+  }
+
+  // FFF7 explicit confirmation.
+  if(custom && chars.has("fff7")){
+    const f7=chars.get("fff7");
+    log("FFF7_DISCOVERED",{
+      uuid:f7.uuid,
+      properties:{
+        read:!!f7.properties.read,
+        write:!!f7.properties.write,
+        writeWithoutResponse:!!f7.properties.writeWithoutResponse,
+        notify:!!f7.properties.notify,
+        indicate:!!f7.properties.indicate
+      }
+    });
+  }
+
+  if(!chars.has("fff1")){
+    throw new Error(`FFF1 Control characteristic not found after discovery retries.${lastError?` ${lastError.message}`:""}`);
+  }
+
+  await subscribeStatus();
+
+  $("refresh").disabled=!chars.has("fff5");
+  $("power").disabled=!chars.has("fff1");
+  document.querySelectorAll(".preset,[data-bright]").forEach(b=>b.disabled=!chars.has("fff1"));
+
+  const flowOk=chars.has("fff7");
+  ["flowRainbow","flowParty","flowWarm","flowStart","flowStop"].forEach(id=>{
+    const el=$(id);if(el)el.disabled=!flowOk;
+  });
+  if($("flowDiag")){
+    $("flowDiag").textContent=flowOk
+      ? `FFF7 READY\nUUID: ${chars.get("fff7").uuid}\nProperties: ${JSON.stringify(chars.get("fff7").properties)}`
+      : "FFF7 NOT FOUND — no Flow command will be sent.";
+  }
+}
+
+async function connectDevice(targetDevice){
+  if(!targetDevice) throw new Error("No Bluetooth device selected.");
+  device=targetDevice;
+  
+  $("deviceName").textContent=device.name||"Yeelight Blue II";
+
+  const onDisconnected=()=>{
+    stopBLESession("gattserverdisconnected");
+    server=null; chars.clear();
+    setConnection("Disconnected",false,true);
+    $("disconnect").disabled=true; $("refresh").disabled=true; $("power").disabled=true;
+    document.querySelectorAll(".preset,[data-bright]").forEach(b=>b.disabled=true);
+    flowRunning=false;
+    $("flowState").textContent="Stopped";
+    ["flowRainbow","flowParty","flowWarm","flowStart","flowStop"].forEach(id=>{const el=$(id);if(el)el.disabled=true;});
+    log("DISCONNECT",{message:"GATT disconnected; queue, music, transitions and Color Flow stopped"});
+    
+  };
+
+  if(device.__yb2DisconnectHandler) {
+    try{device.removeEventListener("gattserverdisconnected",device.__yb2DisconnectHandler)}catch{}
+  }
+  device.__yb2DisconnectHandler=onDisconnected;
+  device.addEventListener("gattserverdisconnected",onDisconnected);
+
+  setConnection("Connecting…");
+  server=await device.gatt.connect();
+  startBLESession();
+  setConnection("Connected",true);
+  $("disconnect").disabled=false;
+  log("CONNECT",{message:`Connected to ${device.name||device.id}`});
+
+  await discover();
+  if(!isBLEConnected()) throw new Error("GATT disconnected during discovery.");
+
+  try{
+    if(chars.has("fff5")) await refreshStatus();
+    else log("ERROR",{message:"FFF5 Status Query characteristic unavailable; connection remains usable."});
+  }catch(e){
+    log("ERROR",{message:"Initial status query failed: "+e.message});
+  }
+
+  if(isBLEConnected()) {
+    setConnection("Ready",true);
+    
+  }
+}
+
+$("connect").onclick=async()=>{
+  try{
+    if(!navigator.bluetooth) throw new Error("Web Bluetooth is not supported in this browser.");
+    setConnection("Selecting device…");
+    const selected=await navigator.bluetooth.requestDevice({
+      acceptAllDevices:true,
+      optionalServices:["generic_access","generic_attribute",SERVICE]
+    });
+    await connectDevice(selected);
+    toast("Bluetooth connected.");
+  }catch(e){
+    stopBLESession("connect-failed");
+    setConnection("Connection failed",false,true);
+    
+    log("ERROR",{message:e.name+": "+e.message});
+    if(e.name!=="NotFoundError") toast(e.message||"Connection failed.","error",4200);
+  }
+};
+
+$("disconnect").onclick=()=>{
+  try{device?.gatt?.disconnect()}
+  catch(e){log("ERROR",{message:e.message})}
+};
+
+$("power").onclick=async()=>{
+  try{
+    await power(!isOn);
+    updateV10Status();
+    toast(isOn?"Light turned on":"Light turned off","good");
+  }catch(e){
+    log("ERROR",{message:e.message});
+    toast(e.message,"bad");
+  }
+};
+
+$("refresh").onclick=async()=>{
+  try{await refreshStatus()}
+  catch(e){log("ERROR",{message:e.message})}
+};
+
+// Restore a previously-authorized device after page refresh.
+// Chrome/Web Bluetooth exposes granted devices through getDevices().
+
+$("brightness").oninput=e=>{$("brightValue").textContent=e.target.value};
+$("brightness").onchange=async e=>{
+ try{
+  const v=Number(e.target.value);brightness=v;
+  if(isOn)await applyRGB(currentColor,v);else{setUI();localStorage.setItem("yb2-brightness",String(v))}
+ }catch(err){log("ERROR",{message:err.message})}
+};
+document.querySelectorAll("[data-bright]").forEach(b=>b.onclick=async()=>{
+ try{const v=Number(b.dataset.bright);brightness=v;if(isOn)await applyRGB(currentColor,v);else{isOn=true;await applyRGB(currentColor,v)}}catch(e){log("ERROR",{message:e.message})}
+});
+
+function syncHexFromPicker(){currentColor=$("color").value;$("hex").value=currentColor.toUpperCase()}
+$("color").oninput=syncHexFromPicker;
+$("applyColor").onclick=async()=>{
+ try{let v=$("hex").value.trim();if(!/^#[0-9a-fA-F]{6}$/.test(v))throw new Error("Use a HEX color like #FF5500.");await applyRGB(v,isOn?brightness:100)}catch(e){log("ERROR",{message:e.message})}
+};
+$("hex").onkeydown=e=>{if(e.key==="Enter")$("applyColor").click()};
+document.querySelectorAll(".preset").forEach(b=>b.onclick=async()=>{try{await applyRGB(b.dataset.color,isOn?brightness:100)}catch(e){log("ERROR",{message:e.message})}});
+
+$("clearLog").onclick=()=>{$("log").textContent="Ready.";records=[]};
+$("export").onclick=()=>{
+ const blob=new Blob([JSON.stringify({exportedAt:ts(),device:device?{name:device.name,id:device.id}:null,records},null,2)],{type:"application/json"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="yeelight-blue2-session.json";a.click();URL.revokeObjectURL(a.href);
+};
+
+
+
+
+$("flowProbe")?.addEventListener("click",async()=>{
+  const diag=$("flowDiag");
+  try{
+    if(!isBLEConnected()) throw new Error("Connect to the Yeelight first.");
+    const custom=await server.getPrimaryService(SERVICE);
+    const f7=await custom.getCharacteristic("0000fff7-0000-1000-8000-00805f9b34fb");
+    chars.set("fff7",f7);
+    const p=f7.properties;
+    diag.textContent=
+      `FFF7 FOUND\n`+
+      `UUID: ${f7.uuid}\n`+
+      `read=${!!p.read} write=${!!p.write} writeWithoutResponse=${!!p.writeWithoutResponse} notify=${!!p.notify}`;
+    ["flowRainbow","flowParty","flowWarm","flowStart","flowStop"].forEach(id=>{const el=$(id);if(el)el.disabled=false});
+    $("rawFlowTest").disabled=false; $("rawFlowStop").disabled=false;
+    log("FFF7_PROBE",{uuid:f7.uuid,properties:p,message:"FFF7 explicitly located; no command sent"});
+  }catch(e){
+    diag.textContent=`FFF7 PROBE FAILED\n${e.name}: ${e.message}`;
+    log("FFF7_PROBE_FAILED",{name:e.name,message:e.message});
+  }
+});
+
+
+
+// ---------- FFF7 / FFF6 Verification ----------
+let lastFlowStatus = null;
+let latestFFF6Status = null;
+
+function parseStatusAscii(ascii){
+  const clean=String(ascii||"").replace(/\0/g,"").trim();
+  const parts=clean.split(",").map(s=>s.trim());
+  if(parts.length < 4) return {raw:clean, parsed:false, parts};
+  const nums=parts.slice(0,6).map(v=>Number(v));
+  return {
+    raw:clean,
+    parsed:true,
+    r:Number.isFinite(nums[0])?nums[0]:null,
+    g:Number.isFinite(nums[1])?nums[1]:null,
+    b:Number.isFinite(nums[2])?nums[2]:null,
+    brightness:Number.isFinite(nums[3])?nums[3]:null,
+    cf:Number.isFinite(nums[4])?nums[4]:null,
+    dl:Number.isFinite(nums[5])?nums[5]:null,
+    parts
+  };
+}
+
+function verifyFlowUI(result, stage){
+  lastFlowStatus=result;
+  const el=$("flowStatusVerify");
+  if(!el) return;
+  if(!result?.parsed){
+    el.textContent=`${stage}: FFF6 received but format was not parsed. Raw: ${result?.raw||"(empty)"}`;
+    return;
+  }
+  el.textContent=
+    `${stage} verification — Raw: ${result.raw} | `+
+    `RGB=${result.r},${result.g},${result.b} | `+
+    `Brightness=${result.brightness} | CF=${result.cf} | DL=${result.dl}`;
+}
+
+async function queryStatusAndWait(stage, timeoutMs=8000){
+  if(!isBLEConnected()) throw new Error("Bluetooth is not connected.");
+  if(latestFFF6Status && stage){
+    // Do not blindly reuse an old status; the query below is still sent.
+  }
+  const statusChar=chars.get("fff5");
+  const responseChar=chars.get("fff6");
+  if(!statusChar) throw new Error("FFF5 Status Query characteristic not found.");
+  if(!responseChar) throw new Error("FFF6 Status Response characteristic not found.");
+
+  return new Promise(async(resolve,reject)=>{
+    let timer;
+    let done=false;
+    const finish=(value,error)=>{
+      if(done)return;
+      done=true;
+      clearTimeout(timer);
+      responseChar.removeEventListener("characteristicvaluechanged",onValue);
+      if(error) reject(error); else resolve(value);
+    };
+    const onValue=(event)=>{
+      try{
+        const value=event.target.value;
+        const bytes=new Uint8Array(value.buffer,value.byteOffset,value.byteLength);
+        const ascii=new TextDecoder().decode(bytes);
+        const result=parseStatusAscii(ascii);
+        log("FLOW_STATUS_VERIFY",{stage,ascii,hex:hex(bytes),parsed:result});
+        finish(result);
+      }catch(e){ finish(null,e); }
+    };
+    responseChar.addEventListener("characteristicvaluechanged",onValue);
+    timer=setTimeout(()=>finish(null,new Error(`No FFF6 response received after ${stage}.`)),timeoutMs);
+
+    try{
+      // The normal connection flow already subscribes to FFF6. We send the documented S query.
+      const bytes=new TextEncoder().encode("S");
+      await statusChar.writeValue(bytes);
+      log("STATUS_QUERY",{ascii:"S",hex:hex(bytes),message:`Flow verification query (${stage})`});
+    }catch(e){
+      finish(null,e);
+    }
+  });
+}
+
+async function verifyFlow(stage){
+  try{
+    const result=await queryStatusAndWait(stage);
+    verifyFlowUI(result,stage);
+    return result;
+  }catch(e){
+    $("flowStatusVerify").textContent=`${stage} verification failed: ${e.name}: ${e.message}`;
+    log("FLOW_STATUS_VERIFY_ERROR",{stage,name:e.name,message:e.message});
+    return null;
+  }
+}
+
+// ---------- Raw FFF7 Protocol Test ----------
+function rawFlowPad20(text){
+  if(text.length > 20) throw new Error(`FFF7 packet is ${text.length} bytes; expected <= 20.`);
+  return text + ",".repeat(20-text.length);
+}
+
+async function rawFlowWrite(text,label){
+  if(!isBLEConnected()) throw new Error("Bluetooth is not connected.");
+  const ch=chars.get("fff7");
+  if(!ch) throw new Error("FFF7 not discovered. Press Probe FFF7 first.");
+  if(!ch.properties.write) throw new Error("FFF7 does not expose write.");
+  const padded=rawFlowPad20(text);
+  const bytes=new TextEncoder().encode(padded);
+
+  // Direct write: this is an isolated protocol test, not the high-frequency queue.
+  if(ch.properties.write) await ch.writeValue(bytes);
+  else await ch.writeValueWithoutResponse(bytes);
+
+  log("COLOR_FLOW_RAW",{
+    ascii:padded,
+    bytes:bytes.length,
+    hex:Array.from(bytes).map(x=>x.toString(16).padStart(2,"0")).join(" "),
+    message:label
+  });
+  return padded;
+}
+
+$("rawFlowTime")?.addEventListener("input",e=>{
+  $("rawFlowTimeValue").textContent=e.target.value;
+});
+
+$("rawFlowTest")?.addEventListener("click",async()=>{
+  const out=$("rawFlowLog");
+  try{
+    if(!isBLEConnected()) throw new Error("Bluetooth is not connected.");
+    const t=Number($("rawFlowTime").value);
+    const steps=[
+      `0,255,0,0,100,${t},`,
+      `1,0,255,0,100,${t},`,
+      `2,0,0,255,100,${t},`
+    ];
+
+    out.textContent="Sending FFF7 step packets...\n";
+
+    for(let i=0;i<steps.length;i++){
+      const padded=await rawFlowWrite(steps[i],`RAW FFF7 STEP ${i}`);
+      out.textContent+=`STEP ${i}: ${padded}\n`;
+      await new Promise(r=>setTimeout(r,180));
+    }
+
+    const start=await rawFlowWrite("CB","RAW FFF7 START");
+    out.textContent+=`START: ${start}\n`;
+    out.textContent+="Querying FFF6 status...\n";
+
+    // Give the peripheral a short moment to apply CB before asking for status.
+    await new Promise(r=>setTimeout(r,250));
+    const result=await verifyFlow("AFTER START");
+
+    if(result?.parsed && result.cf===1){
+      out.textContent+="\n✅ FFF6 reports CF=1 after START.\n";
+    }else if(result?.parsed && result.cf===0){
+      out.textContent+="\n⚠️ FFF6 reports CF=0 after START. Packets were written, but firmware did not report Flow active.\n";
+    }else{
+      out.textContent+="\nℹ️ FFF6 response received, but CF could not be parsed.\n";
+    }
+  }catch(e){
+    out.textContent=`FFF7 RAW TEST FAILED\n${e.name}: ${e.message}`;
+    log("COLOR_FLOW_RAW_ERROR",{name:e.name,message:e.message});
+  }
+});
+
+$("rawFlowStop")?.addEventListener("click",async()=>{
+  const out=$("rawFlowLog");
+  try{
+    const padded=await rawFlowWrite("CE","RAW FFF7 STOP");
+    out.textContent+=`\nSTOP: ${padded}\n`;
+    out.textContent+="Querying FFF6 status after STOP...\n";
+    await new Promise(r=>setTimeout(r,250));
+    const result=await verifyFlow("AFTER STOP");
+
+    if(result?.parsed && result.cf===0){
+      out.textContent+="\n✅ FFF6 reports CF=0 after STOP.\n";
+    }else if(result?.parsed && result.cf===1){
+      out.textContent+="\n⚠️ FFF6 reports CF=1 after STOP.\n";
+    }
+  }catch(e){
+    out.textContent+=`\nSTOP FAILED: ${e.name}: ${e.message}\n`;
+    log("COLOR_FLOW_RAW_ERROR",{name:e.name,message:e.message});
+  }
+});
+
+
+// ---------- V9.7 Custom Flow Builder ----------
+const customFlowState = [
+  {r:255,g:0,b:0,label:"Red"},
+  {r:0,g:255,b:0,label:"Green"},
+  {r:0,g:0,b:255,label:"Blue"}
+];
+
+function renderCustomFlow(){
+  const root=$("customFlowSteps");
+  if(!root)return;
+  root.innerHTML="";
+  customFlowState.forEach((s,i)=>{
+    const row=document.createElement("div");
+    row.className="notice";
+    row.style.marginTop="8px";
+    row.innerHTML=`
+      <div class="labelrow">
+        <span><strong>Step ${i}</strong></span>
+        <button class="btn danger custom-remove" data-i="${i}" ${customFlowState.length<=1?"disabled":""}>Remove</button>
+      </div>
+      <div class="grid" style="margin-top:8px">
+        <label>R <input class="custom-r" data-i="${i}" type="number" min="0" max="255" value="${s.r}"></label>
+        <label>G <input class="custom-g" data-i="${i}" type="number" min="0" max="255" value="${s.g}"></label>
+        <label>B <input class="custom-b" data-i="${i}" type="number" min="0" max="255" value="${s.b}"></label>
+        <label>Name <input class="custom-label" data-i="${i}" value="${s.label}"></label>
+      </div>`;
+    root.appendChild(row);
+  });
+}
+
+function syncCustomFlowInputs(){
+  document.querySelectorAll(".custom-r").forEach(el=>customFlowState[Number(el.dataset.i)].r=Math.max(0,Math.min(255,Number(el.value)||0)));
+  document.querySelectorAll(".custom-g").forEach(el=>customFlowState[Number(el.dataset.i)].g=Math.max(0,Math.min(255,Number(el.value)||0)));
+  document.querySelectorAll(".custom-b").forEach(el=>customFlowState[Number(el.dataset.i)].b=Math.max(0,Math.min(255,Number(el.value)||0)));
+  document.querySelectorAll(".custom-label").forEach(el=>customFlowState[Number(el.dataset.i)].label=el.value);
+}
+
+$("customFlowTime")?.addEventListener("input",e=>$("customFlowTimeValue").textContent=e.target.value);
+$("customFlowLoops")?.addEventListener("input",e=>$("customFlowLoopsValue").textContent=e.target.value);
+
+$("customFlowAdd")?.addEventListener("click",()=>{
+  syncCustomFlowInputs();
+  customFlowState.push({r:255,g:255,b:255,label:"White"});
+  renderCustomFlow();
+});
+
+$("customFlowSteps")?.addEventListener("input",syncCustomFlowInputs);
+$("customFlowSteps")?.addEventListener("click",e=>{
+  const btn=e.target.closest(".custom-remove");
+  if(!btn)return;
+  syncCustomFlowInputs();
+  const i=Number(btn.dataset.i);
+  customFlowState.splice(i,1);
+  renderCustomFlow();
+});
+
+$("customFlowStart")?.addEventListener("click",async()=>{
+  const out=$("customFlowLog");
+  try{
+    if(!isBLEConnected())throw new Error("Bluetooth is not connected.");
+    if(!chars.get("fff7"))throw new Error("FFF7 is not discovered. Press Probe FFF7 first.");
+    syncCustomFlowInputs();
+
+    const t=Number($("customFlowTime").value);
+    const loops=Number($("customFlowLoops").value);
+    const packets=[];
+
+    // The verified device protocol uses N,R,G,B,L,T.
+    // L=100 keeps the tested brightness; T is the selected duration.
+    customFlowState.forEach((s,i)=>{
+      packets.push(`${i},${s.r},${s.g},${s.b},100,${t},`);
+    });
+
+    out.textContent=`Sending ${packets.length} verified FFF7 steps...\n`;
+    for(let i=0;i<packets.length;i++){
+      const padded=await rawFlowWrite(packets[i],`CUSTOM FLOW STEP ${i}`);
+      out.textContent+=`${customFlowState[i].label||("Step "+i)}: ${padded}\n`;
+      await new Promise(r=>setTimeout(r,180));
+    }
+
+    // Preserve verified start command. Loop count is logged for the UI;
+    // no undocumented loop encoding is sent to the bulb.
+    const start=await rawFlowWrite("CB","CUSTOM FLOW START");
+    out.textContent+=`START: ${start}\n`;
+    out.textContent+=`Requested loops: ${loops===0?"infinite":loops}\n`;
+    await new Promise(r=>setTimeout(r,250));
+    const result=await verifyFlow("CUSTOM START");
+
+    if(result?.parsed && result.cf===1){
+      out.textContent+="\n✅ Flow active (CF=1).\n";
+    }else{
+      out.textContent+="\n⚠️ Flow start was written, but FFF6 did not confirm CF=1.\n";
+    }
+  }catch(e){
+    out.textContent=`CUSTOM FLOW FAILED\n${e.name}: ${e.message}`;
+    log("CUSTOM_FLOW_ERROR",{name:e.name,message:e.message});
+  }
+});
+
+$("customFlowStop")?.addEventListener("click",async()=>{
+  const out=$("customFlowLog");
+  try{
+    const stop=await rawFlowWrite("CE","CUSTOM FLOW STOP");
+    out.textContent+=`\nSTOP: ${stop}\n`;
+    await new Promise(r=>setTimeout(r,250));
+    const result=await verifyFlow("CUSTOM STOP");
+    if(result?.parsed && result.cf===0)out.textContent+="\n✅ Flow stopped (CF=0).\n";
+  }catch(e){
+    out.textContent+=`\nSTOP FAILED: ${e.name}: ${e.message}\n`;
+    log("CUSTOM_FLOW_ERROR",{name:e.name,message:e.message});
+  }
+});
+
+renderCustomFlow();
+
+// ---------- Verified FFF7 Color Flow ----------
+let flowSteps = [
+  {r:255,g:0,b:0,l:100,t:2},
+  {r:0,g:255,b:0,l:100,t:2},
+  {r:0,g:0,b:255,l:100,t:2}
+];
+let flowRunning = false;
+
+function pad20(s){
+  if(s.length > 20) throw new Error("Command exceeds FFF7's 20-byte payload.");
+  return s + ",".repeat(20-s.length);
+}
+
+function setFlowPreset(name){
+  const t=Number($("flowTime").value);
+  if(name==="rainbow"){
+    flowSteps=[
+      {r:255,g:0,b:0,l:100,t},{r:255,g:165,b:0,l:100,t},
+      {r:255,g:255,b:0,l:100,t},{r:0,g:255,b:0,l:100,t},
+      {r:0,g:255,b:255,l:100,t},{r:0,g:0,b:255,l:100,t},
+      {r:255,g:0,b:255,l:100,t}
+    ];
+  } else if(name==="party"){
+    flowSteps=[
+      {r:255,g:0,b:0,l:100,t},{r:255,g:0,b:255,l:100,t},
+      {r:0,g:0,b:255,l:100,t},{r:0,g:255,b:255,l:100,t},
+      {r:0,g:255,b:0,l:100,t},{r:255,g:255,b:0,l:100,t}
+    ];
+  } else {
+    flowSteps=[
+      {r:255,g:180,b:90,l:100,t},{r:255,g:120,b:45,l:85,t},
+      {r:255,g:70,b:20,l:70,t},{r:255,g:220,b:160,l:100,t}
+    ];
+  }
+  $("flowState").textContent=name[0].toUpperCase()+name.slice(1)+" preset";
+}
+
+async function sendFlowPacket(command,label){
+  if(!isBLEConnected() || bleStopped) throw new Error("Bluetooth is not connected.");
+  const session=bleSession;
+  return enqueueBLE(async()=>{
+    if(session!==bleSession || !isBLEConnected() || bleStopped)
+      throw new Error("Bluetooth session is no longer active.");
+    const ch=chars.get("fff7");
+    if(!ch) throw new Error("FFF7 Color Flow characteristic not found. Press Probe FFF7 first.");
+    const padded=pad20(command);
+    const bytes=new TextEncoder().encode(padded);
+    if(ch.properties.write) await ch.writeValue(bytes);
+    else if(ch.properties.writeWithoutResponse) await ch.writeValueWithoutResponse(bytes);
+    else throw new Error("FFF7 is not writable.");
+    log("COLOR_FLOW",{ascii:padded,hex:hex(bytes),message:label});
+    return true;
+  });
+}
+
+async function startColorFlow(){
+  if(flowRunning)return;
+  flowRunning=true;
+  $("flowState").textContent="Starting…";
+  try{
+    for(let i=0;i<flowSteps.length;i++){
+      const s=flowSteps[i];
+      await sendFlowPacket(`${i},${s.r},${s.g},${s.b},${s.l},${s.t}`,`Set flow step ${i+1}/${flowSteps.length}`);
+    }
+    await sendFlowPacket("CB","Color Flow START (CB)");
+    $("flowState").textContent="Running";
+    $("flowStart").disabled=true;
+    $("flowStop").disabled=false;
+  }catch(e){
+    flowRunning=false;
+    $("flowState").textContent="Error";
+    throw e;
+  }
+}
+
+async function stopColorFlow(){
+  $("flowState").textContent="Stopping…";
+  try{
+    await sendFlowPacket("CE","Color Flow STOP (CE)");
+  }finally{
+    flowRunning=false;
+    $("flowState").textContent="Stopped";
+    const ok=chars.has("fff7")&&isBLEConnected()&&!bleStopped;
+    $("flowStart").disabled=!ok;
+    $("flowStop").disabled=!ok;
+  }
+}
+
+$("flowTime")?.addEventListener("input",e=>{
+  $("flowTimeValue").textContent=e.target.value;
+  flowSteps.forEach(s=>s.t=Number(e.target.value));
+});
+$("flowRainbow")?.addEventListener("click",()=>setFlowPreset("rainbow"));
+$("flowParty")?.addEventListener("click",()=>setFlowPreset("party"));
+$("flowWarm")?.addEventListener("click",()=>setFlowPreset("warm"));
+$("flowStart")?.addEventListener("click",async()=>{try{await startColorFlow()}catch(e){log("ERROR",{message:"Color Flow start failed: "+e.message})}});
+$("flowStop")?.addEventListener("click",async()=>{try{await stopColorFlow()}catch(e){log("ERROR",{message:"Color Flow stop failed: "+e.message})}});
+
+// ---------- Favorites, Scenes, History, Smooth Transitions ----------
+let transitionTimer=null;
+let favorites=JSON.parse(localStorage.getItem("yb2-favorites")||"[]");
+let scenes=JSON.parse(localStorage.getItem("yb2-scenes")||"[]");
+let history=JSON.parse(localStorage.getItem("yb2-history")||"[]");
+
+function saveCollections(){
+  localStorage.setItem("yb2-favorites",JSON.stringify(favorites));
+  localStorage.setItem("yb2-scenes",JSON.stringify(scenes));
+  localStorage.setItem("yb2-history",JSON.stringify(history.slice(0,50)));
+  if(typeof v13RefreshBackupStats==="function")v13RefreshBackupStats();
+}
+function setupLabel(){return `${currentColor.toUpperCase()} · ${brightness}%`}
+function renderPresets(){
+  const box=$("savedPresets");
+  if(!box)return;
+  box.innerHTML="";
+  [...favorites.map(x=>({...x,type:"Favorite"})),...scenes.map(x=>({...x,type:"Scene"}))].forEach((p,i)=>{
+    const b=document.createElement("button");b.className="preset saved";
+    b.innerHTML=`<strong>${p.type==="Favorite"?"❤️":"🎬"} ${p.name}</strong><small>${p.color.toUpperCase()} · ${p.brightness}%</small>`;
+    b.onclick=async()=>{try{await applyRGB(p.color,p.brightness);addHistory(p.type,p.name)}catch(e){log("ERROR",{message:e.message})}};
+    box.appendChild(b);
+  });
+  if(!box.children.length) box.innerHTML='<div class="muted small">No saved favorites or scenes yet.</div>';
+}
+function addHistory(type,label){
+  history.unshift({time:new Date().toLocaleString(),type,label,color:currentColor,brightness});
+  history=history.slice(0,50);saveCollections();renderHistory();
+}
+function renderHistory(){
+  const box=$("historyList");if(!box)return;
+  box.innerHTML="";
+  if(!history.length){box.innerHTML='<div class="muted small">No history yet.</div>';return}
+  history.forEach((h,i)=>{
+    const row=document.createElement("div");row.className="historyItem";
+    row.innerHTML=`<div style="display:flex;gap:10px;align-items:center"><span class="historyColor" style="background:${h.color}"></span><div><b>${h.label||h.type}</b><div class="historyMeta">${h.time} · ${h.brightness}%</div></div></div>`;
+    const b=document.createElement("button");b.className="btn secondary";b.textContent="Apply";
+    b.onclick=async()=>{try{await applyRGB(h.color,h.brightness);addHistory("History","Applied "+(h.label||h.type))}catch(e){log("ERROR",{message:e.message})}};
+    row.appendChild(b);box.appendChild(row);
+  });
+}
+function saveNamed(type){
+  const name=$("presetName").value.trim()||`${type} ${type==="Favorite"?favorites.length+1:scenes.length+1}`;
+  const item={name,color:currentColor,brightness,createdAt:new Date().toISOString()};
+  if(type==="Favorite")favorites.unshift(item);else scenes.unshift(item);
+  saveCollections();renderPresets();$("presetName").value="";addHistory(type,name);
+  $("currentSetup").textContent=setupLabel();
+}
+$("saveFavorite").onclick=()=>saveNamed("Favorite");
+$("saveScene").onclick=()=>saveNamed("Scene");
+$("clearHistory").onclick=()=>{history=[];saveCollections();renderHistory()};
+$("currentSetup").textContent=setupLabel();
+renderPresets();renderHistory();
+
+$("transitionDuration").oninput=e=>$("transitionValue").textContent=Number(e.target.value).toFixed(1);
+$("transitionTest").onclick=async()=>{
+  try{
+    if(!isBLEConnected())throw new Error("Bluetooth is not connected.");
+    const duration=Number($("transitionDuration").value)*1000;
+    if(transitionTimer)clearInterval(transitionTimer);
+    const target=rgb(currentColor),startB=brightness,start=performance.now(),session=bleSession;
+    transitionTimer=setInterval(async()=>{
+      if(session!==bleSession||!isBLEConnected()||bleStopped){clearInterval(transitionTimer);transitionTimer=null;return;}
+      const t=clamp((performance.now()-start)/duration,0,1);
+      const pulse=t<.5?t*2:(1-t)*2, level=clamp(Math.round(startB*(.72+.28*pulse)),1,100);
+      try{await sendControl(`${target[0]},${target[1]},${target[2]},${level}`,"Smooth transition",{key:"transition"})}catch(e){log("ERROR",{message:e.message})}
+      if(t>=1){clearInterval(transitionTimer);transitionTimer=null;try{await applyRGB(currentColor,startB)}catch(e){log("ERROR",{message:e.message})}}
+    },180);
+  }catch(e){log("ERROR",{message:e.message})}
+};
+$("cancelTransition").onclick=()=>{if(transitionTimer)clearInterval(transitionTimer);transitionTimer=null;log("TRANSITION_STOP",{message:"Smooth transition cancelled"})};
+
+$("temperature").oninput=e=>$("tempValue").textContent=e.target.value+"K";
+$("tempValue").textContent=$("temperature").value+"K";
+$("temperature").onchange=async e=>{
+  try{
+    const value=Number(e.target.value);
+    if(!isBLEConnected())throw new Error("Bluetooth is not connected.");
+    await sendControl(`CLTMP ${value},${brightness},`,`Color Temperature ${value}K @ ${brightness}%`,{key:"temperature"});
+    addHistory("Temperature",`${value}K`);
+  }catch(err){log("ERROR",{message:err.message})}
+};
+document.querySelectorAll("[data-temp]").forEach(b=>b.onclick=async()=>{
+  try{
+    const value=Number(b.dataset.temp);
+    $("temperature").value=value;$("tempValue").textContent=value+"K";
+    if(!isBLEConnected())throw new Error("Bluetooth is not connected.");
+    await sendControl(`CLTMP ${value},${brightness},`,`Color Temperature ${value}K @ ${brightness}%`,{key:"temperature"});
+    addHistory("Temperature",`${value}K`);
+  }catch(e){log("ERROR",{message:e.message})}
+});
+
+
+// ---------- V10 Real Controller UX ----------
+function toast(message, kind="info"){
+  const el=$("toast"); if(!el)return;
+  el.textContent=message; el.style.borderColor=kind==="good"?"#2f7d4c":kind==="bad"?"#7d3030":"#385074";
+  el.classList.add("show"); clearTimeout(window.__toastTimer); window.__toastTimer=setTimeout(()=>el.classList.remove("show"),2200);
+}
+$("quickConnect")?.addEventListener("click",()=>$("connect").click());
+
+function updateV10Status(){
+  const bt=$("statusBluetooth"), pw=$("statusPower"), fl=$("statusFlow"), cur=$("statusCurrent");
+  if(bt){bt.textContent=isBLEConnected()?"Connected":"Disconnected";bt.className=isBLEConnected()?"statusGood":"statusMuted";}
+  if(pw){pw.textContent=isOn?"ON":"OFF";pw.className=isOn?"statusGood":"statusMuted";}
+  if(fl){const active=flowRunning;fl.textContent=active?"Active":"Stopped";fl.className=active?"statusGood":"statusMuted";}
+  if(cur){cur.textContent=`${currentColor.toUpperCase()} · ${brightness}%`;cur.className="statusMuted";}
+}
+
+// ---------- V10 App Navigation + State ----------
+document.querySelectorAll(".navBtn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".navBtn").forEach(x=>x.classList.remove("active"));
+    btn.classList.add("active");
+    const id=btn.dataset.section;
+    document.querySelectorAll(".appSection").forEach(s=>s.classList.remove("active"));
+    const target=document.getElementById(id);
+    if(target)target.classList.add("active");
+    if(id==="developerSection") log("NAVIGATION",{message:"Developer mode opened"});
+  });
+});
+
+function updateHomeState(){
+  updateV10Status();
+  if($("homeColor"))$("homeColor").textContent=currentColor.toUpperCase();
+  if($("homeBrightness"))$("homeBrightness").textContent=brightness+"%";
+  if($("homeQueue"))$("homeQueue").textContent=`Queue ${bleQueue.length+(bleBusy?1:0)}`;
+  if($("homeTemp") && $("temperature"))$("homeTemp").textContent=$("temperature").value+"K";
+  if($("homeTimer"))$("homeTimer").textContent=offTimerEndsAt?"Active":"No timer";
+  if($("homeEnergy"))$("homeEnergy").textContent=typeof energyData!=="undefined"?fmtKwh(energyData.todayWh):"0.000 kWh";
+}
+const oldUpdateQueueUI=updateQueueUI;
+updateQueueUI=function(){
+  oldUpdateQueueUI();
+  updateHomeState();
+};
+const oldSetUI=setUI;
+setUI=function(){
+  oldSetUI();
+  updateHomeState();
+};
+updateHomeState();
+
+// Keyboard shortcuts: Space power, 1-4 quick colors, +/- brightness.
+window.addEventListener("keydown",e=>{
+  if(["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName))return;
+  if(e.code==="Space"){e.preventDefault();$("power")?.click()}
+  if(e.key==="1")document.querySelector('[data-color="#FF0000"]')?.click();
+  if(e.key==="2")document.querySelector('[data-color="#00FF00"]')?.click();
+  if(e.key==="3")document.querySelector('[data-color="#0000FF"]')?.click();
+  if(e.key==="4")document.querySelector('[data-color="#FFFFFF"]')?.click();
+  if(e.key==="+"||e.key==="="){brightness=Math.min(100,brightness+5);$("brightness").value=brightness;$("brightness").dispatchEvent(new Event("change"))}
+  if(e.key==="-"){brightness=Math.max(0,brightness-5);$("brightness").value=brightness;$("brightness").dispatchEvent(new Event("change"))}
+});
+
+// ---------- Color Temperature Reverse Engineering ----------
+const ctTarget=document.getElementById("ctTarget");
+const ctTargetValue=document.getElementById("ctTargetValue");
+const ctCommand=document.getElementById("ctCommand");
+
+if(ctTarget){
+  ctTarget.oninput=()=>{
+    ctTargetValue.textContent=ctTarget.value;
+    ctCommand.value=`CLTMP ${ctTarget.value},${brightness||100},`;
+  };
+}
+document.querySelectorAll("[data-ct]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    ctTarget.value=btn.dataset.ct;
+    ctTargetValue.textContent=btn.dataset.ct;
+    ctCommand.value=`CLTMP ${btn.dataset.ct},${brightness||100},`;
+  });
+});
+
+document.getElementById("ctQuery")?.addEventListener("click",async()=>{
+  try{
+    await refreshStatus();
+    document.getElementById("ctProbeLog").textContent =
+      `Status query sent at ${new Date().toLocaleTimeString()}. Check the Status section / Debug log for FFF6.`;
+  }catch(e){
+    document.getElementById("ctProbeLog").textContent=`Query failed: ${e.message}`;
+    log("CT_PROBE_ERROR",{message:e.message});
+  }
+});
+
+document.getElementById("ctSend")?.addEventListener("click",async()=>{
+  try{
+    const temp=Number(ctTarget.value);
+    const level=Number(brightness||100);
+    if(temp<1700||temp>6500)throw new Error("Temperature must be between 1700K and 6500K.");
+    const raw=`CLTMP ${temp},${level},`;
+    ctCommand.value=raw;
+    await sendControl(raw,`Color Temperature ${temp}K @ ${level}%`);
+    document.getElementById("ctProbeLog").textContent =
+      `Sent: ${raw}\\nTime: ${new Date().toLocaleTimeString()}\\n\\n`+
+      `Temperature command sent through the BLE queue. Query Status to confirm FFF6.`;
+  }catch(e){
+    document.getElementById("ctProbeLog").textContent=`Send failed: ${e.message}`;
+    log("CT_ERROR",{message:e.message});
+  }
+});
+
+// ---------- Music Reactive Engine ----------
+let audioCtx=null, analyser=null, micStream=null, sourceNode=null, audioRAF=null;
+let musicRunning=false, lastBleTime=0, beatEnergy=0, energyAverage=0;
+const audioBuffer = new Uint8Array(256);
+const canvas=$("visualizer"), ctx=canvas.getContext("2d");
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function avgRange(arr,start,end){
+  let s=0,n=0;
+  for(let i=start;i<end && i<arr.length;i++){s+=arr[i];n++}
+  return n?s/n:0;
+}
+function frequencyBands(){
+  if(!analyser) return {bass:0,mid:0,treble:0,energy:0};
+  analyser.getByteFrequencyData(audioBuffer);
+  const bass=avgRange(audioBuffer,1,12)/255;
+  const mid=avgRange(audioBuffer,12,55)/255;
+  const treble=avgRange(audioBuffer,55,150)/255;
+  const energy=(bass*.45+mid*.35+treble*.20);
+  return {bass,mid,treble,energy};
+}
+function drawVisualizer(){
+  if(!analyser)return;
+  analyser.getByteFrequencyData(audioBuffer);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const bars=64, gap=3, w=canvas.width/bars-gap;
+  for(let i=0;i<bars;i++){
+    const idx=Math.floor(i*(audioBuffer.length/bars));
+    const v=audioBuffer[idx]/255;
+    const h=Math.max(3,v*canvas.height*.92);
+    const x=i*(w+gap);
+    const y=canvas.height-h;
+    ctx.fillStyle=`hsl(${210+i*2} 85% ${45+v*25}%)`;
+    ctx.fillRect(x,y,w,h);
+  }
+}
+function reactiveColor(mode,bass,mid,treble,energy,beat){
+  if(mode==="spectrum"){
+    const r=clamp(Math.round(bass*255*1.25),0,255);
+    const g=clamp(Math.round(mid*255*1.25),0,255);
+    const b=clamp(Math.round(treble*255*1.25),0,255);
+    return `#${[r,g,b].map(x=>x.toString(16).padStart(2,"0")).join("")}`;
+  }
+  if(mode==="party"){
+    const hue=(performance.now()/8)%360;
+    const s=100, l=35+energy*30;
+    // HSL is converted through a temporary canvas color only for visualization;
+    // use a small RGB conversion here.
+    const c=(1-Math.abs(2*l/100-1))*s/100, x=c*(1-Math.abs((hue/60)%2-1)), m=l/100-c/2;
+    let rr=0,gg=0,bb=0;
+    if(hue<60){rr=c;gg=x}else if(hue<120){rr=x;gg=c}else if(hue<180){gg=c;bb=x}
+    else if(hue<240){gg=x;bb=c}else if(hue<300){rr=x;bb=c}else{rr=c;bb=x}
+    return "#"+[rr,gg,bb].map(v=>Math.round((v+m)*255).toString(16).padStart(2,"0")).join("");
+  }
+  if(mode==="pulse"){
+    const v=clamp(.25+beat*.75,0,1);
+    const [r,g,b]=rgb(currentColor);
+    return "#"+[r*v,g*v,b*v].map(x=>Math.round(x).toString(16).padStart(2,"0")).join("");
+  }
+  if(mode==="ambient"){
+    const r=clamp(Math.round((bass*.8+energy*.2)*255),0,255);
+    const g=clamp(Math.round((mid*.9+energy*.1)*255),0,255);
+    const b=clamp(Math.round((treble*.8+energy*.2)*255),0,255);
+    return "#"+[r,g,b].map(x=>x.toString(16).padStart(2,"0")).join("");
+  }
+  // Beat Sync: keep user's base color, modulate brightness strongly on beats.
+  return currentColor;
+}
+async function musicTick(){
+  if(!musicRunning)return;
+  const {bass,mid,treble,energy}=frequencyBands();
+  const sensitivity=Number($("sensitivity").value)/100;
+  energyAverage=energyAverage*.92+energy*.08;
+  const spike=Math.max(0,energy-energyAverage*1.18);
+  beatEnergy=beatEnergy*.78+spike*2.8;
+  const beat=clamp(beatEnergy*(.55+sensitivity*.8),0,1);
+  $("energy").value=Math.round(energy*100);
+  $("energyValue").textContent=Math.round(energy*100)+"%";
+  $("beat").value=Math.round(beat*100);
+  $("beatValue").textContent=Math.round(beat*100)+"%";
+  drawVisualizer();
+
+  const mode=$("musicMode").value;
+  let targetBrightness=Number($("musicBrightness").value);
+  if(mode==="beat") targetBrightness=clamp(Math.round(targetBrightness*(.35+beat*.65)),1,100);
+  if(mode==="pulse") targetBrightness=clamp(Math.round(targetBrightness*(.3+beat*.7)),1,100);
+  if(mode==="spectrum"||mode==="ambient") targetBrightness=clamp(Math.round(targetBrightness*(.55+energy*.45)),1,100);
+  const color=reactiveColor(mode,bass,mid,treble,energy,beat);
+
+  // BLE rate limiter: never write faster than ~8 times/sec.
+  const now=performance.now();
+  if(now-lastBleTime>220 && chars.has("fff1")){
+    try{
+      await sendControl(`${rgb(color)[0]},${rgb(color)[1]},${rgb(color)[2]},${targetBrightness}`,"Music Reactive");
+      lastBleTime=performance.now();
+    }catch(e){log("ERROR",{message:"Music BLE write failed: "+e.message});}
+  }
+  audioRAF=requestAnimationFrame(musicTick);
+}
+$("audioStart").onclick=async()=>{
+  try{
+    if(!navigator.mediaDevices?.getUserMedia)throw new Error("Microphone access is not available in this browser.");
+    micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    analyser=audioCtx.createAnalyser(); analyser.fftSize=512; analyser.smoothingTimeConstant=.72;
+    sourceNode=audioCtx.createMediaStreamSource(micStream); sourceNode.connect(analyser);
+    musicRunning=true; $("audioState").textContent="Listening"; $("audioStart").disabled=true; $("audioStop").disabled=false;
+    energyAverage=0;beatEnergy=0;lastBleTime=0;log("AUDIO_START",{message:"Microphone analyzer started"});
+    musicTick();
+  }catch(e){log("ERROR",{message:"Microphone failed: "+e.message})}
+};
+$("audioStop").onclick=()=>{
+  musicRunning=false;if(audioRAF)cancelAnimationFrame(audioRAF);
+  if(sourceNode)sourceNode.disconnect();if(audioCtx)audioCtx.close();
+  if(micStream)micStream.getTracks().forEach(t=>t.stop());
+  audioCtx=null;analyser=null;sourceNode=null;micStream=null;
+  $("audioState").textContent="Stopped";$("audioStart").disabled=false;$("audioStop").disabled=true;
+  $("energy").value=0;$("energyValue").textContent="0%";$("beat").value=0;$("beatValue").textContent="0%";
+  ctx.clearRect(0,0,canvas.width,canvas.height);log("AUDIO_STOP");
+};
+$("sensitivity").oninput=e=>$("sensValue").textContent=e.target.value;
+$("musicBrightness").oninput=e=>$("musicBrightValue").textContent=e.target.value;
+
+
+// V9.1 defensive queue cap: prevents runaway backlog even if an older producer misbehaves.
+(() => {
+  const cap = () => {
+    try {
+      if (Array.isArray(window.bleQueue) && window.bleQueue.length > 5) {
+        window.bleQueue.splice(0, window.bleQueue.length - 5);
+        if (typeof updateQueueUI === "function") updateQueueUI();
+      }
+    } catch (_) {}
+  };
+  setInterval(cap, 250);
+})();
+
+
+
+window.addEventListener("beforeunload",()=>{try{stopBLESession("page-unload")}catch(_){}});
+
+setInterval(updateV10Status,500);
+updateV10Status();
+</script>
+<div id="toast" class="toast"></div>
+<div id="presetModal" class="modalBackdrop" aria-hidden="true"><div class="modal"><h3>✏️ Edit saved item</h3><div class="labelrow"><span>Name</span></div><input id="editPresetName" class="hex" placeholder="Name"><div class="labelrow" style="margin-top:12px"><span>Type</span></div><select id="editPresetType" style="width:100%;background:#09111f;color:#fff;border:1px solid #30405d;border-radius:10px;padding:11px"><option>Favorite</option><option>Scene</option></select><div class="modalActions"><button id="cancelPresetEdit" class="btn secondary">Cancel</button><button id="savePresetEdit" class="btn">Save Changes</button></div></div></div>
+<script>
+// V11.1 additive layer: core V10 BLE implementation is intentionally untouched.
+(function(){
+  const E={
+    breathing:()=>{const [r,g,b]=rgb(currentColor);return [{r,g,b,l:15,t:1},{r,g,b,l:40,t:1},{r,g,b,l:70,t:1},{r,g,b,l:100,t:1},{r,g,b,l:70,t:1},{r,g,b,l:40,t:1}]},
+    strobing:()=>{const [r,g,b]=rgb(currentColor);return [{r,g,b,l:100,t:1},{r,g,b,l:2,t:1}]},
+    cycle:()=>[{r:255,g:0,b:0,l:100,t:1},{r:0,g:255,b:0,l:100,t:1},{r:0,g:0,b:255,l:100,t:1},{r:255,g:255,b:0,l:100,t:1},{r:255,g:0,b:255,l:100,t:1},{r:0,g:255,b:255,l:100,t:1}],
+    rainbow:()=>[{r:255,g:0,b:0,l:100,t:1},{r:255,g:165,b:0,l:100,t:1},{r:255,g:255,b:0,l:100,t:1},{r:0,g:255,b:0,l:100,t:1},{r:0,g:255,b:255,l:100,t:1},{r:0,g:0,b:255,l:100,t:1},{r:255,g:0,b:255,l:100,t:1}],
+    starry:()=>[{r:15,g:25,b:70,l:12,t:1},{r:255,g:255,b:255,l:100,t:1},{r:20,g:35,b:90,l:15,t:1},{r:120,g:160,b:255,l:60,t:1}],
+    smart:()=>[{r:255,g:180,b:90,l:75,t:1},{r:255,g:120,b:60,l:90,t:1},{r:120,g:170,b:255,l:80,t:1},{r:90,g:120,b:255,l:70,t:1}],
+    adaptive:()=>[{r:255,g:210,b:160,l:80,t:1},{r:255,g:190,b:110,l:90,t:1},{r:190,g:210,b:255,l:85,t:1},{r:130,g:170,b:255,l:75,t:1}],
+    aura:()=>[{r:90,g:70,b:255,l:55,t:1},{r:170,g:70,b:255,l:70,t:1},{r:255,g:90,b:180,l:65,t:1},{r:80,g:160,b:255,l:60,t:1}]
+  };
+  let selected='static';
+  function select(name){selected=name;document.querySelectorAll('.effectCard').forEach(x=>x.classList.toggle('active',x.dataset.effect===name));$('effectStatus').textContent=(name==='dark'?'Dark (Off)':name)+' selected.';}
+  async function apply(name){
+    if(!isBLEConnected()) throw new Error('Bluetooth is not connected.');
+    if(name==='dark'){if(typeof flowRunning!=='undefined'&&flowRunning) await stopColorFlow();await power(false);$('effectStatus').textContent='Dark (Off) applied.';return;}
+    if(name==='music'){if($('audioStart')&&!$('audioStart').disabled) $('audioStart').click();$('effectStatus').textContent='Music Reactive started.';return;}
+    if(name==='static'){if(typeof flowRunning!=='undefined'&&flowRunning) await stopColorFlow();await applyRGB(currentColor,brightness);$('effectStatus').textContent='Static applied.';return;}
+    if(typeof flowRunning!=='undefined'&&flowRunning) await stopColorFlow();
+    const speed=Number($('effectSpeed').value||2); flowSteps=E[name]().map(x=>({...x,t:speed})); await startColorFlow();$('effectStatus').textContent=name+' running.';
+  }
+  document.querySelectorAll('.effectCard').forEach(b=>b.addEventListener('click',()=>select(b.dataset.effect)));
+  $('effectSpeed')?.addEventListener('input',e=>$('effectSpeedValue').textContent=e.target.value);
+  $('effectApply')?.addEventListener('click',async()=>{try{await apply(selected)}catch(e){log('ERROR',{message:'Effect failed: '+e.message});$('effectStatus').textContent=e.message}});
+  $('effectStop')?.addEventListener('click',async()=>{try{if(typeof flowRunning!=='undefined'&&flowRunning)await stopColorFlow();else if(selected==='music'&&$('audioStop'))$('audioStop').click();$('effectStatus').textContent='Effect stopped.'}catch(e){log('ERROR',{message:e.message})}});
+
+  // CRUD presentation layer. Existing V10 save functions remain the source of truth for storage.
+  let filter='all',editing=null;
+  const id=()=>crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
+  function ensureIds(){[favorites,scenes].forEach(a=>a.forEach(x=>{if(!x.id)x.id=id()}));saveCollections();}
+  function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function all(){return [...favorites.map(x=>({...x,type:'Favorite'})),...scenes.map(x=>({...x,type:'Scene'}))].filter(x=>filter==='all'||x.type.toLowerCase()===filter.slice(0,-1));}
+  function render(){ensureIds();const box=$('savedPresets');if(!box)return;const items=all();$('collectionCount').textContent=items.length;box.innerHTML=items.length?'':'<div class="muted small">No saved favorites or scenes yet.</div>';items.forEach(p=>{const row=document.createElement('div');row.className='presetRow';row.innerHTML=`<span class="presetSwatch" style="background:${esc(p.color||'#fff')}"></span><div class="presetInfo"><strong>${p.type==='Favorite'?'❤️':'🎬'} ${esc(p.name)}</strong><small>${esc((p.color||'#fff').toUpperCase())} · ${p.brightness??100}%</small></div><div class="presetActions"><button class="btn" data-a="apply">Apply</button><button class="btn secondary" data-a="edit">Edit</button><button class="btn secondary" data-a="dup">Duplicate</button><button class="btn danger" data-a="del">Delete</button></div>`;row.querySelector('[data-a=apply]').onclick=async()=>{try{await applyRGB(p.color,p.brightness);addHistory(p.type,p.name)}catch(e){log('ERROR',{message:e.message})}};row.querySelector('[data-a=edit]').onclick=()=>{editing=p;$('editPresetName').value=p.name||'';$('editPresetType').value=p.type;$('presetModal').classList.add('open')};row.querySelector('[data-a=dup]').onclick=()=>{const c={...p,id:id(),name:p.name+' Copy'};delete c.type;(p.type==='Favorite'?favorites:scenes).unshift(c);saveCollections();render()};row.querySelector('[data-a=del]').onclick=()=>{if(!confirm('Delete "'+p.name+'"?'))return;const a=p.type==='Favorite'?favorites:scenes,i=a.findIndex(x=>x.id===p.id);if(i>=0){a.splice(i,1);saveCollections();render()}};box.appendChild(row)})}
+  document.querySelectorAll('[data-collection]').forEach(b=>b.onclick=()=>{filter=b.dataset.collection;document.querySelectorAll('[data-collection]').forEach(x=>x.classList.toggle('active',x===b));render()});
+  $('cancelPresetEdit').onclick=()=>{$('presetModal').classList.remove('open');editing=null};
+  $('presetModal').onclick=e=>{if(e.target.id==='presetModal'){$('presetModal').classList.remove('open');editing=null}};
+  $('savePresetEdit').onclick=()=>{if(!editing)return;const old=editing.type==='Favorite'?favorites:scenes,i=old.findIndex(x=>x.id===editing.id);if(i<0)return;const item={...old[i],name:$('editPresetName').value.trim()||old[i].name};const type=$('editPresetType').value;old.splice(i,1);(type==='Favorite'?favorites:scenes).unshift(item);saveCollections();$('presetModal').classList.remove('open');editing=null;render()};
+  ensureIds();render();
+})();
+</script>
+<div id="toastHost" class="toastHost"><div class="v14-footer">Yeelight Blue II Controller · V14 Stable · Local-first · BLE only</div>
+</div>
+</body>
+</html>
